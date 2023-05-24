@@ -1,8 +1,10 @@
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.example.violinesque.Config
+import com.example.violinesque.Interactability
+import com.example.violinesque.PrefRepo
 import com.example.violinesque.RotationReader
 import com.example.violinesque.SoundManager
 import com.example.violinesque.StringManager
@@ -26,6 +28,9 @@ class PlayModeActivityViewModel(application: Application) : AndroidViewModel(app
     private val activeStreamIDs : IntArray = intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
     private val streamVolumes : FloatArray = floatArrayOf(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)
     private val blendInVolumes : FloatArray = floatArrayOf(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)
+
+    private val config: Config = Config
+    private val prefRepo: PrefRepo = PrefRepo(application.applicationContext)
 
     fun buttonTouched (currentString: ViolinString, buttonNumber: Int) {
 
@@ -61,6 +66,44 @@ class PlayModeActivityViewModel(application: Application) : AndroidViewModel(app
         val currentHighestPosition: Int = maxNonZeroIndex(buttonStates)
 
         if (currentHighestPosition > -1) blendInNote(newString, currentHighestPosition)
+    }
+
+    fun updateCurrentString (calibratedRoll : Float) {
+        currentString.value = stringManager.calculateCurrentString(calibratedRoll)
+    }
+
+    fun getCurrentStringLiveData () : LiveData<ViolinString> {
+        return currentString
+    }
+
+    fun getConfigStateLiveData () : LiveData<Long> {
+        return config.configState
+    }
+    fun getButtonInteractabilityArray () : Array<Interactability> {
+        return config.buttonInteractabilities
+    }
+
+    fun getRotationVector () = rotationReader
+
+    fun loadConfig () {
+
+        val savedButtonInteractabilities: Array<Interactability> = arrayOf(
+            prefRepo.getButtonInteractability(0),
+            prefRepo.getButtonInteractability(1),
+            prefRepo.getButtonInteractability(2),
+            prefRepo.getButtonInteractability(3),
+            prefRepo.getButtonInteractability(4),
+            prefRepo.getButtonInteractability(5),
+            prefRepo.getButtonInteractability(6),
+            prefRepo.getButtonInteractability(7),
+            prefRepo.getButtonInteractability(8),
+            prefRepo.getButtonInteractability(9),
+            prefRepo.getButtonInteractability(10),
+            prefRepo.getButtonInteractability(11),
+            prefRepo.getButtonInteractability(12)
+        )
+
+        config.init(savedButtonInteractabilities)
     }
 
     private fun playNote (currentString: ViolinString, buttonNumber: Int) {
@@ -121,7 +164,6 @@ class PlayModeActivityViewModel(application: Application) : AndroidViewModel(app
                 }
 
                 soundManager.setVolume(streamID, streamVolumes[buttonNumber])
-                Log.w("ViewModel", "${streamVolumes[buttonNumber]}")
             }
 
             streamVolumes[buttonNumber] = 0f
@@ -165,14 +207,4 @@ class PlayModeActivityViewModel(application: Application) : AndroidViewModel(app
 
         return maxIndex
     }
-
-    fun updateCurrentString (calibratedRoll : Float) {
-        currentString.value = stringManager.calculateCurrentString(calibratedRoll)
-    }
-
-    fun getCurrentString () : LiveData<ViolinString> {
-        return currentString
-    }
-
-    fun getRotationVector () = rotationReader
 }
