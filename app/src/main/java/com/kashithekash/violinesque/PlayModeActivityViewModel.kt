@@ -1,15 +1,9 @@
+package com.kashithekash.violinesque
+
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.kashithekash.violinesque.Config
-import com.kashithekash.violinesque.Interactability
-import com.kashithekash.violinesque.PrefRepo
-import com.kashithekash.violinesque.RotationReader
-import com.kashithekash.violinesque.SoundManager
-import com.kashithekash.violinesque.StringManager
-import com.kashithekash.violinesque.ViolinString
-import kotlin.concurrent.thread
 
 class PlayModeActivityViewModel(application: Application) : AndroidViewModel(application) {
 
