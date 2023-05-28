@@ -2,7 +2,6 @@ package com.kashithekash.violinesque
 
 import android.content.Context
 import android.content.Intent
-import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -49,6 +48,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModelProvider
 import com.kashithekash.violinesque.ui.theme.ViolinEsqueTheme
+import kotlinx.coroutines.coroutineScope
 
 private val G_STRING_NOTES: Array<String> =
     arrayOf("G", "G#", "A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G")
@@ -77,16 +77,19 @@ val defaultInteractabilityArray: Array<Interactability> = arrayOf(
 
 class PlayModeActivity : ComponentActivity() {
 
+    private lateinit var playModeActivityViewModel: PlayModeActivityViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
 
-        val playModeActivityViewModel: PlayModeActivityViewModel =  ViewModelProvider(this)[PlayModeActivityViewModel(application)::class.java]
+        playModeActivityViewModel = ViewModelProvider(this)[PlayModeActivityViewModel(application)::class.java]
 
         playModeActivityViewModel.loadConfig()
+        playModeActivityViewModel.monitorStrings()
 
         playModeActivityViewModel.getRotationVector().observe(this) {
-            playModeActivityViewModel.updateCurrentString(it[2])
+            playModeActivityViewModel.updateRoll(it[2])
         }
 
         setContent {
@@ -97,12 +100,11 @@ class PlayModeActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = ViolinEsqueTheme.colors.background
                 ) {
-                    LockScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
                     PlayMode(
                         playModeActivityViewModel.getConfigStateLiveData(),
                         playModeActivityViewModel.getCurrentStringLiveData(),
-                        { s, n -> playModeActivityViewModel.buttonTouched(s, n) },
-                        { s, n -> playModeActivityViewModel.buttonReleased(s, n) },
+                        { n -> playModeActivityViewModel.buttonTouched(n) },
+                        { n -> playModeActivityViewModel.buttonReleased(n) },
                         { s -> playModeActivityViewModel.stringChanged(s) },
                         { playModeActivityViewModel.getButtonInteractabilityArray() }
                     )
@@ -126,14 +128,19 @@ class PlayModeActivity : ComponentActivity() {
     override fun onStop() {
         super.onStop()
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        playModeActivityViewModel.releaseResources()
+    }
 }
 
 @Composable
 fun PlayMode (
     configStateLiveData: LiveData<Long>,
     currentStringLiveData: LiveData<ViolinString>,
-    onButtonTouched: (ViolinString, Int) -> Unit,
-    onButtonReleased: (ViolinString, Int) -> Unit,
+    onButtonTouched: (Int) -> Unit,
+    onButtonReleased: (Int) -> Unit,
     onStringChanged: (ViolinString) -> Unit,
     getButtonInteractabilities: () -> Array<Interactability>,
     modifier: Modifier = Modifier
@@ -169,13 +176,14 @@ fun PlayMode (
                 if (buttonInteractabilityArray[0] == Interactability.ENABLED) {
                     OpenStringButton_Enabled(
                         currentStringLiveData,
-                        { s, n -> onButtonTouched(s, n) },
-                        { s, n -> onButtonReleased(s, n) },
+                        { s, n -> onButtonTouched(n) },
+                        { s, n -> onButtonReleased(n) },
                         modifier
                     )
                 } else { OpenStringButton_Disabled() }
                 StringsContainer(currentStringLiveData)
             }
+            Spacer(modifier = modifier.width(5.dp))
             Column (
                 modifier = modifier
                     .weight(1f)
@@ -184,8 +192,8 @@ fun PlayMode (
                     if (buttonInteractabilityArray[i] == Interactability.ENABLED) {
                         FingerPositionButton_Enabled(
                             i, currentStringLiveData,
-                            { s, n -> onButtonTouched(s, n) },
-                            { s, n -> onButtonReleased(s, n) },
+                            { s, n -> onButtonTouched(n) },
+                            { s, n -> onButtonReleased(n) },
                             modifier
                         )
                     } else if (buttonInteractabilityArray[i] == Interactability.DISABLED) {
@@ -210,7 +218,7 @@ fun SideBar (modifier: Modifier = Modifier) {
         LayoutConfigButton(modifier = modifier)
         Spacer(modifier = modifier.height(30.dp))
         CalibrationSettingsButton(modifier = modifier)
-        Spacer(modifier = modifier.height(30.dp))
+        Spacer(modifier = modifier.weight(1f))
     }
 }
 
@@ -313,6 +321,7 @@ fun OpenStringButton_Enabled (
 
 @Composable
 fun OpenStringButton_Disabled (modifier: Modifier = Modifier) {
+
     Box(modifier = modifier
         .fillMaxSize()
         .background(color = ViolinEsqueTheme.colors.fingerBoardTouched)
@@ -381,8 +390,7 @@ fun RowScope.AString (isHighlighted: Boolean, modifier: Modifier = Modifier) {
 
 @Composable
 fun RowScope.EString (isHighlighted: Boolean, modifier: Modifier = Modifier) {
-    Box (
-        modifier
+    Box (modifier = modifier
             .fillMaxSize()
             .weight(1f)) {
         Box(modifier = modifier
@@ -451,8 +459,8 @@ fun ColumnScope.FingerPositionButton_Enabled (
 fun ColumnScope.FingerPositionButton_Disabled (modifier: Modifier = Modifier) {
 
     Box (modifier = modifier
-        .weight(1f)
         .fillMaxSize()
+        .weight(1f)
         .background(color = ViolinEsqueTheme.colors.buttonTouched)
     )
 }
@@ -464,14 +472,14 @@ fun PlayModePreview() {
         PlayMode(
             MutableLiveData<Long>(0),
             MutableLiveData(ViolinString.A),
-            { s, n -> doNothing(s, n) },
-            {s, n -> doNothing(s, n) },
-            { s -> doNothing(s, 0) },
+            { n -> doNothing(n) },
+            { n -> doNothing(n) },
+            { s -> doNothing(0) },
             { defaultInteractabilityArray }
         )
     }
 }
 
-fun doNothing (s : ViolinString, n : Int) {
+fun doNothing (n : Int) {
 
 }

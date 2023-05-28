@@ -5,22 +5,39 @@ import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.SoundPool
 import android.os.Build
-import kotlin.concurrent.thread
+import android.util.Log
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.time.Duration.Companion.milliseconds
 
-
+private const val SOUND_UPDATE_DELAY_MS = 10
 private const val MAX_VOLUME : Float = 1f
+private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default
 
 private const val START_BOWING_FADE_IN_TIME_MS = 50f
+private const val NOTE_TRANSITION_TIME_MS = 30f
 private const val PLACE_MOVING_BOW_FADE_IN_TIME_MS = 30f
-private const val PLACE_FINGER_WITH_BOW_MOVING_FADE_IN_TIME = 60f
-private const val LIFT_FINGER_WITH_BOW_MOVING_FADE_OUT_TIME = 60f
+private const val PLACE_FINGER_WITH_BOW_MOVING_FADE_IN_TIME = 30f
+private const val LIFT_FINGER_WITH_BOW_MOVING_FADE_OUT_TIME = 30f
 private const val LIFT_BOW_FADE_OUT_TIME = 100f
 
-private val isButtonTouched : BooleanArray = booleanArrayOf(false, false, false, false, false, false, false, false, false, false, false, false, false)
-private val activeStreamIDs : IntArray = intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-private val activeStreamVolumes : FloatArray = floatArrayOf(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)
-private val fadingStreamIDs : IntArray = intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-private val fadingStreamVolumes : FloatArray = floatArrayOf(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)
+private val isButtonTouched: BooleanArray = booleanArrayOf(false, false, false, false, false, false, false, false, false, false, false, false, false)
+private var activePostion: Int = -1
+private var fadingPosition: Int = -1
+private var activeString: ViolinString = ViolinString.A
+private var fadingString: ViolinString = ViolinString.A
+private var activeStreamID: Int = 0
+private var fadingPositionStreamID: Int = 0
+private var fadingStringStreamID: Int = 0
+private var terminalStreams: MutableList<Int> = mutableListOf<Int>()
+private var activeStreamVolume: Float = 0f
+private var fadingPositionStreamVolume: Float = 0f
+private var fadingStringStreamVolume: Float = 0f
 
 private val soundPool : SoundPool = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 
@@ -30,12 +47,12 @@ private val soundPool : SoundPool = if (Build.VERSION.SDK_INT >= Build.VERSION_C
         .build()
 
     SoundPool.Builder()
-        .setMaxStreams(2)
+        .setMaxStreams(3)
         .setAudioAttributes(audioAttributes)
         .build()
 
 } else {
-    SoundPool(2, AudioManager.USE_DEFAULT_STREAM_TYPE, 0)
+    SoundPool(3, AudioManager.USE_DEFAULT_STREAM_TYPE, 0)
 }
 
 private val noteSoundFileHashMap : HashMap<Int, Int> = HashMap(1)
@@ -46,229 +63,218 @@ class SoundManager (context: Context) {
         loadSoundFiles(context)
     }
 
-    fun handleButtonTouched (currentString: ViolinString, buttonNumber: Int) {
+    fun handleButtonTouch (position: Int) {
 
-        val currentHighestPosition: Int = maxNonZeroIndex(isButtonTouched)
-        isButtonTouched[buttonNumber] = true
+        isButtonTouched[position] = true
 
-        if (currentHighestPosition < buttonNumber) {
+        if (position <= activePostion) return
 
-            if (currentHighestPosition > -1) {
-                placeFingerWhileBowing(currentString, buttonNumber, currentHighestPosition)
-            }
-            else {
-                startBowing(currentString, buttonNumber)
-            }
-        }
+        fadingPosition = activePostion
+        activePostion = position
+
+        fadingPositionStreamVolume = activeStreamVolume
+        activeStreamVolume = 0f
+
+        fadingString = activeString
+
+        if (fadingPositionStreamID > 0) terminalStreams.add(fadingPositionStreamID)
+        fadingPositionStreamID = activeStreamID
+        activeStreamID = play(activeString, activePostion, activeStreamVolume)
+
+//        Log.w("SoundManager", "Fading: $fadingString $fadingPosition $fadingPositionStreamID Active: $activeString $activePostion $activeStreamID.")
+    }
+
+    fun handleButtonRelease (position: Int) {
+
+        isButtonTouched[position] = false
+
+        if (position != activePostion) return
+
+        fadingPosition = activePostion
+        activePostion = getHighestPosition()
+
+        fadingPositionStreamVolume = activeStreamVolume
+        activeStreamVolume = 0f
+
+        fadingString = activeString
+
+        if (fadingPositionStreamID > 0) terminalStreams.add(fadingPositionStreamID)
+        fadingPositionStreamID = activeStreamID
+        activeStreamID = if (activePostion == -1) 0 else play(activeString, activePostion, activeStreamVolume)
+
+//        Log.w("SoundManager", "Fading: $fadingString $fadingPosition $fadingPositionStreamID Active: $activeString $activePostion $activeStreamID.")
     }
 
     fun handleStringChange (newString: ViolinString) {
 
-        val currentHighestPosition: Int = maxNonZeroIndex(isButtonTouched)
+        fadingString = activeString
+        activeString = newString
 
-        if (currentHighestPosition > -1)
-            changeStringWhileBowing(newString, currentHighestPosition)
+        fadingPosition = activePostion
+        activePostion = getHighestPosition()
+
+        fadingStringStreamVolume = activeStreamVolume
+        activeStreamVolume = 0f
+
+        if (fadingStringStreamID > 0) terminalStreams.add(fadingStringStreamID)
+        fadingStringStreamID = activeStreamID
+        activeStreamID =
+            if (activePostion == -1) 0
+            else play(newString, activePostion, activeStreamVolume)
+
+//        Log.w("SoundManager", "Fading: $fadingString $fadingPosition $fadingPositionStreamID Active: $activeString $activePostion $activeStreamID.")
     }
 
-    fun handleButtonReleased (currentString: ViolinString, buttonNumber: Int) {
+    suspend fun manageActiveStream () {
 
-        isButtonTouched[buttonNumber] = false
+        withContext(defaultDispatcher) {
 
-        val currentHighestPosition: Int = maxNonZeroIndex(isButtonTouched)
+            launch {
 
-        if (buttonNumber > currentHighestPosition) {
-            if (currentHighestPosition > -1) {
-                liftFingerWhileBowing(currentString, buttonNumber, currentHighestPosition)
-            }
-            else {
-                liftBow(buttonNumber)
+                while (true) {
+
+                    if (activeStreamID == 0 || activeStreamVolume >= MAX_VOLUME) {
+                        delay(SOUND_UPDATE_DELAY_MS.milliseconds)
+                        continue
+                    }
+
+                    // Playing on a string with no active positions
+                    if (fadingPosition == -1 || fadingPosition != activePostion && fadingString != activeString)
+                        activeStreamVolume += MAX_VOLUME * SOUND_UPDATE_DELAY_MS / START_BOWING_FADE_IN_TIME_MS
+                    // Playing on a string with active lower positions
+                    else if (fadingPosition > -1 && fadingPosition != activePostion && fadingString == activeString)
+                        activeStreamVolume += MAX_VOLUME * SOUND_UPDATE_DELAY_MS / NOTE_TRANSITION_TIME_MS
+                    // Shifting to a new string while playing the same position
+                    else if (fadingPosition > -1 && fadingPosition == activePostion && activeString != fadingString)
+                        activeStreamVolume += MAX_VOLUME * SOUND_UPDATE_DELAY_MS / PLACE_MOVING_BOW_FADE_IN_TIME_MS
+
+                    setVolume(activeStreamID, min(1f, activeStreamVolume))
+
+                    delay(SOUND_UPDATE_DELAY_MS.milliseconds)
+                }
             }
         }
     }
 
-    private fun startBowing (currentString: ViolinString, buttonNumber: Int) {
+    suspend fun manageFadingPositionStream () {
 
-        fadingStreamIDs[buttonNumber] = activeStreamIDs[buttonNumber]
-        fadingStreamVolumes[buttonNumber] = activeStreamVolumes[buttonNumber]
+        withContext(defaultDispatcher) {
 
-        activeStreamIDs[buttonNumber] = play(currentString, buttonNumber, fadingStreamVolumes[buttonNumber])
-        activeStreamVolumes[buttonNumber] = fadingStreamVolumes[buttonNumber]
+            launch {
 
-        thread {
+                while (true) {
 
-            while (activeStreamVolumes[buttonNumber] < MAX_VOLUME) {
+                    if (fadingPositionStreamID == 0) {
+                        delay(SOUND_UPDATE_DELAY_MS.milliseconds)
+                        continue
+                    }
 
-                activeStreamVolumes[buttonNumber] += (MAX_VOLUME / (START_BOWING_FADE_IN_TIME_MS / 10f))
+                    if (fadingPositionStreamVolume <= 0) {
 
-                try {
-                    Thread.sleep(10)
-                } catch (e: InterruptedException) {
-                    e.printStackTrace()
+                        fadingPositionStreamVolume = 0f
+                        terminalStreams.add(fadingPositionStreamID)
+                        fadingPositionStreamID = 0
+
+                        delay(SOUND_UPDATE_DELAY_MS.milliseconds)
+                        continue
+                    }
+
+                    // Fading out a position being replaced with a new one
+                    if (activePostion > -1 && fadingPosition != activePostion && activeString == fadingString)
+                        fadingPositionStreamVolume -= MAX_VOLUME * SOUND_UPDATE_DELAY_MS / NOTE_TRANSITION_TIME_MS
+                    else if (activePostion == -1)
+                        fadingPositionStreamVolume -= MAX_VOLUME * SOUND_UPDATE_DELAY_MS / LIFT_BOW_FADE_OUT_TIME
+
+                    setVolume(fadingPositionStreamID, max(0f, fadingPositionStreamVolume))
+
+                    delay(SOUND_UPDATE_DELAY_MS.milliseconds)
                 }
-
-                setVolume(activeStreamIDs[buttonNumber], activeStreamVolumes[buttonNumber])
             }
         }
     }
 
-    private fun changeStringWhileBowing (newString: ViolinString, buttonNumber: Int) {
+    suspend fun manageFadingStringStream () {
 
-        fadingStreamIDs[buttonNumber] = activeStreamIDs[buttonNumber]
-        activeStreamIDs[buttonNumber] = play(newString, buttonNumber, fadingStreamVolumes[buttonNumber])
+        withContext(defaultDispatcher) {
 
-        val tempVolume = activeStreamVolumes[buttonNumber]
-        activeStreamVolumes[buttonNumber] = fadingStreamVolumes[buttonNumber]
-        fadingStreamVolumes[buttonNumber] = tempVolume
+            launch {
 
-        // To avoid race conditions
-        val localFadingStreamID = fadingStreamIDs[buttonNumber]
-        val localActiveStreamID = activeStreamIDs[buttonNumber]
+                while (true) {
 
-        // Fade old string out
-        thread {
+                    if (fadingStringStreamID == 0) {
+                        delay(SOUND_UPDATE_DELAY_MS.milliseconds)
+                        continue
+                    }
 
-            while (fadingStreamVolumes[buttonNumber] > 0) {
+                    if (fadingStringStreamVolume <= 0) {
 
-                fadingStreamVolumes[buttonNumber] -= (MAX_VOLUME / (LIFT_BOW_FADE_OUT_TIME / 10f))
+                        fadingStringStreamVolume = 0f
+                        terminalStreams.add(fadingStringStreamID)
+                        fadingStringStreamID = 0
 
-                try {
-                    Thread.sleep(10)
-                } catch (e: InterruptedException) {
-                    e.printStackTrace()
+                        delay(SOUND_UPDATE_DELAY_MS.milliseconds)
+                        continue
+                    }
+                    
+                    fadingStringStreamVolume -= MAX_VOLUME * SOUND_UPDATE_DELAY_MS / LIFT_BOW_FADE_OUT_TIME
+
+                    setVolume(fadingStringStreamID, max(0f, fadingStringStreamVolume))
+
+                    delay(SOUND_UPDATE_DELAY_MS.milliseconds)
                 }
-
-                setVolume(localFadingStreamID, fadingStreamVolumes[buttonNumber])
-            }
-
-            stop(localFadingStreamID)
-        }
-
-        // Fade new string in
-        thread {
-
-            while (isButtonTouched[buttonNumber] && activeStreamVolumes[buttonNumber] < MAX_VOLUME) {
-
-                activeStreamVolumes[buttonNumber] += (MAX_VOLUME / (PLACE_MOVING_BOW_FADE_IN_TIME_MS / 10f))
-
-                try {
-                    Thread.sleep(10)
-                } catch (e: InterruptedException) {
-                    e.printStackTrace()
-                }
-
-                setVolume(localActiveStreamID, activeStreamVolumes[buttonNumber])
             }
         }
     }
 
-    private fun placeFingerWhileBowing (currentString: ViolinString, buttonNumber: Int, previousHighestPosition: Int) {
+    suspend fun manageTerminalStreams () {
 
-        fadingStreamIDs[previousHighestPosition] = activeStreamIDs[previousHighestPosition]
-        activeStreamIDs[buttonNumber] = play(currentString, buttonNumber, fadingStreamVolumes[buttonNumber])
+        withContext(defaultDispatcher) {
 
-        activeStreamVolumes[buttonNumber] = fadingStreamVolumes[buttonNumber]
-        fadingStreamVolumes[previousHighestPosition] = activeStreamVolumes[previousHighestPosition]
+            launch {
 
-        thread {
+                while (true) {
 
-            while (isButtonTouched[buttonNumber] && activeStreamVolumes[buttonNumber] < MAX_VOLUME) {
+                    if (terminalStreams.isNotEmpty())
+                        stop(terminalStreams.removeFirst())
 
-                activeStreamVolumes[buttonNumber] += (MAX_VOLUME / (PLACE_FINGER_WITH_BOW_MOVING_FADE_IN_TIME / 10f))
-                fadingStreamVolumes[previousHighestPosition] -= (MAX_VOLUME / (PLACE_FINGER_WITH_BOW_MOVING_FADE_IN_TIME / 10f))
-
-                try {
-                    Thread.sleep(10)
-                } catch (e: InterruptedException) {
-                    e.printStackTrace()
+                    delay(SOUND_UPDATE_DELAY_MS.milliseconds)
                 }
-
-                setVolume(fadingStreamIDs[previousHighestPosition], fadingStreamVolumes[previousHighestPosition])
-                setVolume(activeStreamIDs[buttonNumber], activeStreamVolumes[buttonNumber])
             }
-
-            stop(fadingStreamIDs[previousHighestPosition])
-        }
-    }
-
-    private fun liftFingerWhileBowing (currentString: ViolinString, buttonNumber: Int, newHighestPosition: Int) {
-
-        fadingStreamIDs[buttonNumber] = activeStreamIDs[buttonNumber]
-        activeStreamIDs[newHighestPosition] = play(currentString, newHighestPosition, fadingStreamVolumes[newHighestPosition])
-
-        activeStreamVolumes[newHighestPosition] = fadingStreamVolumes[newHighestPosition]
-        fadingStreamVolumes[buttonNumber] = activeStreamVolumes[buttonNumber]
-
-        thread {
-
-            while (isButtonTouched[newHighestPosition] && activeStreamVolumes[newHighestPosition] < MAX_VOLUME) {
-
-                fadingStreamVolumes[buttonNumber] -= (MAX_VOLUME / (LIFT_FINGER_WITH_BOW_MOVING_FADE_OUT_TIME / 10f))
-                activeStreamVolumes[newHighestPosition] += (MAX_VOLUME / (LIFT_FINGER_WITH_BOW_MOVING_FADE_OUT_TIME / 10f))
-
-                try {
-                    Thread.sleep(10)
-                } catch (e: InterruptedException) {
-                    e.printStackTrace()
-                }
-
-                setVolume(fadingStreamIDs[buttonNumber], fadingStreamVolumes[buttonNumber])
-                setVolume(activeStreamIDs[newHighestPosition], activeStreamVolumes[newHighestPosition])
-            }
-
-            stop(fadingStreamIDs[buttonNumber])
-        }
-    }
-
-    private fun liftBow (buttonNumber: Int) {
-
-        fadingStreamIDs[buttonNumber] = activeStreamIDs[buttonNumber]
-        fadingStreamVolumes[buttonNumber] = activeStreamVolumes[buttonNumber]
-
-        thread {
-
-            while (!isButtonTouched[buttonNumber] && fadingStreamVolumes[buttonNumber] > 0) {
-
-                fadingStreamVolumes[buttonNumber] -= (MAX_VOLUME / (LIFT_BOW_FADE_OUT_TIME / 10f))
-
-                try {
-                    Thread.sleep(10)
-                } catch (e: InterruptedException) {
-                    e.printStackTrace()
-                }
-
-                setVolume(fadingStreamIDs[buttonNumber], fadingStreamVolumes[buttonNumber])
-            }
-
-            stop(fadingStreamIDs[buttonNumber])
         }
     }
 
     private fun play (violinString: ViolinString, buttonNumber: Int, volume: Float = MAX_VOLUME) : Int {
 
-        return soundPool.play(
+        val streamID = soundPool.play(
             noteSoundFileHashMap[violinString.ordinal * 100 + buttonNumber]!!,
             volume,
             volume,
-            1,
+            0,
             -1,
             1f
         )
+
+//        Log.w("SoundManager", "Started $streamID")
+
+        return streamID
     }
 
     private fun stop (streamID: Int) {
         soundPool.stop(streamID)
+//        Log.w("SoundManager", "Stopped $streamID.")
     }
 
     private fun setVolume (streamID: Int, newVolume: Float) {
         soundPool.setVolume(streamID, newVolume, newVolume)
+//        Log.w("SoundManager", "Set volume of $streamID to $newVolume.")
     }
 
-    private fun maxNonZeroIndex (arr: BooleanArray) : Int {
+    private fun getHighestPosition () : Int {
 
-        var maxIndex : Int = -1
+        var maxIndex: Int = -1
 
-        for (i in arr.indices)
-            if (arr[i]) maxIndex = i
+        for (i in isButtonTouched.indices)
+            if (isButtonTouched[i]) maxIndex = i
 
         return maxIndex
     }
@@ -332,4 +338,7 @@ class SoundManager (context: Context) {
         noteSoundFileHashMap[ViolinString.E.ordinal * 100 + 12] = soundPool.load(context, R.raw.e6, 0)
     }
 
+    fun release () {
+        soundPool.release()
+    }
 }

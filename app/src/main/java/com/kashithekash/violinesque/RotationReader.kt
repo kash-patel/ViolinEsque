@@ -30,7 +30,6 @@ class RotationReader(context: Context) : LiveData<FloatArray>(), SensorEventList
     }
 
     private fun startListening () {
-
         sensorManager.registerListener(this, rotationSensor, SensorManager.SENSOR_DELAY_GAME)
     }
 

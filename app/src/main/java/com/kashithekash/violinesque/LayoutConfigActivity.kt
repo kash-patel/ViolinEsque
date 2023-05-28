@@ -25,8 +25,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.kashithekash.violinesque.ui.theme.ViolinEsqueTheme
 
 class LayoutConfigActivity : ComponentActivity() {
@@ -42,7 +44,6 @@ class LayoutConfigActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = ViolinEsqueTheme.colors.background
                 ) {
-                    LockScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
                     LayoutConfigScreen(
                         { n -> layoutConfigActivityViewModel.getButtonInteractability(n) },
                         { n, i -> layoutConfigActivityViewModel.setButtonInteractability(n, i) }
@@ -83,9 +84,9 @@ fun LayoutConfigScreen (
             .fillMaxSize()
             .weight(weight = 1f)
         ) {
-            ConfigSideBar()
+            ConfigSideBar(modifier = modifier)
             Spacer(modifier = modifier.width(10.dp))
-            BoxWithConstraints (modifier = modifier
+            Box (modifier = modifier
                 .fillMaxHeight()
                 .weight(1f)) {
                 OpenStringButton(
@@ -94,6 +95,7 @@ fun LayoutConfigScreen (
                     modifier = modifier
                 )
             }
+            Spacer(modifier = modifier.width(5.dp))
             Column (
                 modifier = modifier
                     .weight(1f)
@@ -122,7 +124,7 @@ fun OpenStringButton (
 
     Box (modifier = modifier
         .fillMaxSize()
-        .background(color = if (interactability == Interactability.ENABLED) ViolinEsqueTheme.colors.fingerBoardTouched else ViolinEsqueTheme.colors.fingerBoard)
+        .background(color = if (interactability == Interactability.ENABLED) ViolinEsqueTheme.colors.fingerBoard else ViolinEsqueTheme.colors.fingerBoardTouched)
         .clickable {
             interactability = when (interactability) {
                 Interactability.ENABLED -> Interactability.DISABLED
@@ -151,13 +153,13 @@ fun ColumnScope.FingerPositionButton (
     var interactability by remember { mutableStateOf(initialInteractability) }
 
     Box(modifier = modifier
-        .weight(1f)
         .fillMaxSize()
+        .weight(1f)
         .clickable {
             interactability = toggleInteractability(interactability)
             onInteractabilityChange(buttonNumber, interactability)
         }
-        .background(color = if (interactability == Interactability.ENABLED) ViolinEsqueTheme.colors.buttonTouched else ViolinEsqueTheme.colors.button)
+        .background(color = if (interactability == Interactability.ENABLED) ViolinEsqueTheme.colors.button else ViolinEsqueTheme.colors.buttonTouched)
     ) {
         Text(
             text = interactability.toString(),
@@ -165,6 +167,7 @@ fun ColumnScope.FingerPositionButton (
             modifier = Modifier.align(Alignment.Center)
         )
     }
+
 }
 
 @Preview

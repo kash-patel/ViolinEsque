@@ -4,6 +4,8 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
 
 class PlayModeActivityViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -16,20 +18,27 @@ class PlayModeActivityViewModel(application: Application) : AndroidViewModel(app
     private val config: Config = Config
     private val prefRepo: PrefRepo = PrefRepo(application.applicationContext)
 
-    fun buttonTouched (currentString: ViolinString, buttonNumber: Int) {
-        soundManager.handleButtonTouched(currentString, buttonNumber)
+    fun buttonTouched (buttonNumber: Int) {
+        soundManager.handleButtonTouch(buttonNumber)
     }
 
-    fun buttonReleased (currentString: ViolinString, buttonNumber: Int) {
-        soundManager.handleButtonReleased(currentString, buttonNumber)
+    fun buttonReleased (buttonNumber: Int) {
+        soundManager.handleButtonRelease(buttonNumber)
     }
 
     fun stringChanged (newString: ViolinString) {
         soundManager.handleStringChange(newString)
     }
 
-    fun updateCurrentString (calibratedRoll : Float) {
-        currentString.value = stringManager.calculateCurrentString(calibratedRoll)
+    fun monitorStrings () {
+        viewModelScope.launch { soundManager.manageActiveStream() }
+        viewModelScope.launch { soundManager.manageFadingPositionStream() }
+        viewModelScope.launch { soundManager.manageFadingStringStream() }
+        viewModelScope.launch { soundManager.manageTerminalStreams() }
+    }
+
+    fun updateRoll (roll : Float) {
+        currentString.value = stringManager.calculateCurrentString(roll)
     }
 
     fun getCurrentStringLiveData () : LiveData<ViolinString> {
@@ -63,6 +72,10 @@ class PlayModeActivityViewModel(application: Application) : AndroidViewModel(app
             prefRepo.getButtonInteractability(12)
         )
 
-        config.init(savedButtonInteractabilities)
+        config.init(savedButtonInteractabilities, prefRepo.getRollCentre(), prefRepo.getStringRollRange())
+    }
+
+    fun releaseResources () {
+        soundManager.release()
     }
 }

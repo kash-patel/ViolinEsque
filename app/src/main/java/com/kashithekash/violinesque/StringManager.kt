@@ -6,20 +6,19 @@ enum class ViolinString {
 
 class StringManager () {
 
-    private var stringTiltRange: Int = 30  // In degrees
-
+    private val config: Config = Config
 
     fun calculateCurrentString(calibratedRoll : Float) : ViolinString {
 
         var currentString: ViolinString = ViolinString.A
 
-        if (calibratedRoll <= -stringTiltRange) {
+        if (calibratedRoll <= config.rollCentre - config.stringRollRange) {
             currentString = ViolinString.G
-        } else if (calibratedRoll > -stringTiltRange && calibratedRoll <= 0) {
+        } else if (calibratedRoll > config.rollCentre - config.stringRollRange && calibratedRoll <= config.rollCentre) {
             currentString = ViolinString.D
-        } else if (calibratedRoll > 0 && calibratedRoll <= stringTiltRange) {
+        } else if (calibratedRoll > config.rollCentre && calibratedRoll <= config.rollCentre + config.stringRollRange) {
             currentString = ViolinString.A
-        } else if (calibratedRoll > stringTiltRange) {
+        } else if (calibratedRoll > config.rollCentre + config.stringRollRange) {
             currentString = ViolinString.E
         }
 
