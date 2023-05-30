@@ -1,5 +1,6 @@
 package com.kashithekash.violinesque
 
+import SoundManagerStringBased
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
@@ -11,7 +12,8 @@ class PlayModeActivityViewModel(application: Application) : AndroidViewModel(app
 
     private val rotationReader : RotationReader = RotationReader(context = application)
     private val stringManager : StringManager = StringManager()
-    private val soundManager : SoundManager = SoundManager(context = application)
+//    private val soundManager : SoundManager = SoundManager(context = application)
+    private val soundManagerStringBased : SoundManagerStringBased = SoundManagerStringBased(context = application)
 
     private var currentString: MutableLiveData<ViolinString> = MutableLiveData<ViolinString>(ViolinString.A)
 
@@ -19,22 +21,30 @@ class PlayModeActivityViewModel(application: Application) : AndroidViewModel(app
     private val prefRepo: PrefRepo = PrefRepo(application.applicationContext)
 
     fun buttonTouched (buttonNumber: Int) {
-        soundManager.handleButtonTouch(buttonNumber)
+//        soundManager.handleButtonTouch(buttonNumber)
+        soundManagerStringBased.handleButtonTouch(buttonNumber)
     }
 
     fun buttonReleased (buttonNumber: Int) {
-        soundManager.handleButtonRelease(buttonNumber)
+//        soundManager.handleButtonRelease(buttonNumber)
+        soundManagerStringBased.handleButtonRelease(buttonNumber)
     }
 
     fun stringChanged (newString: ViolinString) {
-        soundManager.handleStringChange(newString)
+//        soundManager.handleStringChange(newString)
+        soundManagerStringBased.handleStringChange(newString)
     }
 
     fun monitorStrings () {
-        viewModelScope.launch { soundManager.manageActiveStream() }
-        viewModelScope.launch { soundManager.manageFadingPositionStream() }
-        viewModelScope.launch { soundManager.manageFadingStringStream() }
-        viewModelScope.launch { soundManager.manageTerminalStreams() }
+//        viewModelScope.launch { soundManager.manageActiveStream() }
+//        viewModelScope.launch { soundManager.manageFadingPositionStream() }
+//        viewModelScope.launch { soundManager.manageFadingStringStream() }
+//        viewModelScope.launch { soundManager.manageTerminalStreams() }
+
+        viewModelScope.launch { soundManagerStringBased.manageGString() }
+        viewModelScope.launch { soundManagerStringBased.manageDString() }
+        viewModelScope.launch { soundManagerStringBased.manageAString() }
+        viewModelScope.launch { soundManagerStringBased.manageEString() }
     }
 
     fun updateRoll (roll : Float) {
@@ -76,6 +86,7 @@ class PlayModeActivityViewModel(application: Application) : AndroidViewModel(app
     }
 
     fun releaseResources () {
-        soundManager.release()
+//        soundManager.release()
+        soundManagerStringBased.release()
     }
 }

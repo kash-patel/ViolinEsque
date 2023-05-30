@@ -1,10 +1,11 @@
-package com.kashithekash.violinesque
-
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.SoundPool
 import android.os.Build
+import android.util.Log
+import com.kashithekash.violinesque.R
+import com.kashithekash.violinesque.ViolinString
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -24,17 +25,9 @@ private const val PLACE_MOVING_BOW_FADE_IN_TIME_MS = 10
 private const val LIFT_BOW_FADE_OUT_TIME_MS = 100
 
 private val isButtonTouched: BooleanArray = booleanArrayOf(false, false, false, false, false, false, false, false, false, false, false, false, false)
-private var activePostion: Int = -1
-private var fadingPosition: Int = -1
-private var activeString: ViolinString = ViolinString.A
-private var fadingString: ViolinString = ViolinString.A
-private var activeStreamID: Int = 0
-private var fadingPositionStreamID: Int = 0
-private var fadingStringStreamID: Int = 0
-private var terminalStreams: MutableList<Int> = mutableListOf<Int>()
-private var activeStreamVolume: Float = 0f
-private var fadingPositionStreamVolume: Float = 0f
-private var fadingStringStreamVolume: Float = 0f
+//private val isStringActive: BooleanArray = booleanArrayOf(false, false, true, false)
+private var activeString: ViolinString? = null
+private var activePosition: Int = -1
 
 private val soundPool : SoundPool = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 
@@ -44,207 +37,165 @@ private val soundPool : SoundPool = if (Build.VERSION.SDK_INT >= Build.VERSION_C
         .build()
 
     SoundPool.Builder()
-        .setMaxStreams(2)
+        .setMaxStreams(3)
         .setAudioAttributes(audioAttributes)
         .build()
 
 } else {
-    SoundPool(2, AudioManager.USE_DEFAULT_STREAM_TYPE, 0)
+    SoundPool(3, AudioManager.USE_DEFAULT_STREAM_TYPE, 0)
 }
 
 private val noteSoundFileHashMap : HashMap<Int, Int> = HashMap(1)
 
-class SoundManager (context: Context) {
+class SoundManagerStringBased (context: Context) {
 
-    init {
-        loadSoundFiles(context)
-    }
+    init { loadSoundFiles(context) }
 
     fun handleButtonTouch (position: Int) {
 
         isButtonTouched[position] = true
 
-        if (position <= activePostion) return
+        if (position <= activePosition) return
 
-        fadingPosition = activePostion
-        activePostion = position
-
-        fadingPositionStreamVolume = activeStreamVolume
-        activeStreamVolume = 0f
-
-//        fadingString = activeString
-
-        if (fadingPositionStreamID > 0) terminalStreams.add(fadingPositionStreamID)
-        fadingPositionStreamID = activeStreamID
-        activeStreamID = play(activeString, activePostion, activeStreamVolume)
-
-//        Log.w("SoundManager", "Button Touched ($activeString $activePostion)\n\t$fadingString $fadingPosition $fadingPositionStreamID > $activeString $activePostion $activeStreamID.")
+        activePosition = position
     }
 
     fun handleButtonRelease (position: Int) {
 
         isButtonTouched[position] = false
 
-        if (position != activePostion) return
+        if (position != activePosition) return
 
-        fadingPosition = activePostion
-        activePostion = getHighestPosition()
-
-        fadingPositionStreamVolume = activeStreamVolume
-        activeStreamVolume = 0f
-
-//        fadingString = activeString
-
-        if (fadingPositionStreamID > 0) terminalStreams.add(fadingPositionStreamID)
-        fadingPositionStreamID = activeStreamID
-        activeStreamID = if (activePostion == -1) 0 else play(activeString, activePostion, activeStreamVolume)
-
-//        Log.w("SoundManager", "Button Released ($activeString $fadingPosition)\n\t$activeString $fadingPosition $fadingPositionStreamID > $activeString $activePostion $activeStreamID.")
+        activePosition = getHighestPosition()
     }
 
     fun handleStringChange (newString: ViolinString) {
 
-        fadingString = activeString
+//        isStringActive[activeString.ordinal] = false
+//        isStringActive[newString.ordinal] = true
         activeString = newString
-
-//        fadingPosition = activePostion
-//        activePostion = getHighestPosition()
-
-        fadingStringStreamVolume = activeStreamVolume
-        activeStreamVolume = 0f
-
-        if (fadingStringStreamID > 0) terminalStreams.add(fadingStringStreamID)
-        fadingStringStreamID = activeStreamID
-        activeStreamID =
-            if (activePostion == -1) 0
-            else play(newString, activePostion, activeStreamVolume)
-
-//        Log.w("SoundManager", "String Changed\n\t$fadingString $activePostion $fadingStringStreamID > $activeString $activePostion $activeStreamID.")
     }
 
-    suspend fun manageActiveStream () {
+    private suspend fun manageString (string: ViolinString) {
 
-        withContext(defaultDispatcher) {
+        var cachedPosition: Int = -1
+        var activeStreamID: Int = 0
+        var fadingStreamID: Int = 0
+        var activeStreamVolume: Float = 0f
+        var fadingStreamVolume: Float = 0f
 
-            launch {
 
-                while (true) {
+        while (true) {
 
-                    if (activeStreamID == 0 || activeStreamVolume >= MAX_VOLUME) {
-                        delay(SOUND_UPDATE_DELAY_MS.milliseconds)
-                        continue
+            if (activeString == null) continue
+
+            // Starting streams
+            if (activeString == string) {
+
+                // Position change
+                if  (cachedPosition != activePosition) {
+
+                    cachedPosition = activePosition
+                    Log.w("SoundManagerStringBased", "Active: $string $cachedPosition")
+
+                    // Shift streams if something is already playing
+                    if (activeStreamID > 0) {
+                        if (fadingStreamID > 0) stop(fadingStreamID)
+                        fadingStreamID = activeStreamID
+                        fadingStreamVolume = activeStreamVolume
                     }
 
-                    // Playing on a string with no active positions
-                    if (fadingPosition == -1 || fadingString != activeString)
-                        activeStreamVolume += MAX_VOLUME * SOUND_UPDATE_DELAY_MS / START_BOWING_FADE_IN_TIME_MS
-                    // Playing on a string with active lower positions
-                    else if (fadingPosition > -1 && fadingPosition != activePostion && fadingString == activeString)
-                        activeStreamVolume += MAX_VOLUME * SOUND_UPDATE_DELAY_MS / NOTE_TRANSITION_TIME_MS
-                    // Shifting to a new string while playing the same position
-                    else if (fadingPosition > -1 && fadingPosition == activePostion && activeString != fadingString)
-                        activeStreamVolume += MAX_VOLUME * SOUND_UPDATE_DELAY_MS / PLACE_MOVING_BOW_FADE_IN_TIME_MS
-
-//                    Log.w("SoundManager", "From manageActiveStream:")
-                    setVolume(activeStreamID, min(1f, activeStreamVolume))
-
-                    delay(SOUND_UPDATE_DELAY_MS.milliseconds)
+                    // Start new stream at current string and position
+                    activeStreamID = if (cachedPosition == -1) 0 else play(string, cachedPosition)
+                    activeStreamVolume = 0f
                 }
+            }
+
+            // Fading out and stopping streams
+            else {
+
+                // Reset position
+                cachedPosition = -1
+
+                // If something is playing and string changes, fade it out
+                if (activeStreamID > 0) {
+                    stop(fadingStreamID)
+                    fadingStreamID = activeStreamID
+                    fadingStreamVolume = activeStreamVolume
+                    activeStreamID = 0
+                    activeStreamVolume = 0f
+                }
+            }
+
+            // Increase active stream volume
+            if (activeStreamID > 0 && activeStreamVolume < MAX_VOLUME) {
+
+                if (fadingStreamID > 0 && fadingStreamVolume > 0.8f)
+                    activeStreamVolume += MAX_VOLUME * SOUND_UPDATE_DELAY_MS / NOTE_TRANSITION_TIME_MS
+                else activeStreamVolume += MAX_VOLUME * SOUND_UPDATE_DELAY_MS / START_BOWING_FADE_IN_TIME_MS
+
+                setVolume(activeStreamID, min(MAX_VOLUME, activeStreamVolume))
+            }
+
+            // Decrease fading stream volume
+            if (fadingStreamID > 0 && fadingStreamVolume > 0) {
+
+                if (cachedPosition > -1)
+                    fadingStreamVolume -= MAX_VOLUME * SOUND_UPDATE_DELAY_MS / NOTE_TRANSITION_TIME_MS
+                else
+                    fadingStreamVolume -= MAX_VOLUME * SOUND_UPDATE_DELAY_MS / LIFT_BOW_FADE_OUT_TIME_MS
+
+                setVolume(fadingStreamID, max(0f, fadingStreamVolume))
+            }
+
+            else if (fadingStreamID > 0 && fadingStreamVolume <= 0) {
+                stop(fadingStreamID)
+                fadingStreamID = 0
+                fadingStreamVolume = 0f
+            }
+
+            delay(SOUND_UPDATE_DELAY_MS.milliseconds)
+        }
+    }
+
+
+    suspend fun manageGString () {
+
+        withContext(defaultDispatcher) {
+            launch {
+                manageString(ViolinString.G)
             }
         }
     }
 
-    suspend fun manageFadingPositionStream () {
+    suspend fun manageDString () {
 
         withContext(defaultDispatcher) {
-
             launch {
-
-                while (true) {
-
-                    if (fadingPositionStreamID == 0) {
-                        delay(SOUND_UPDATE_DELAY_MS.milliseconds)
-                        continue
-                    }
-
-                    if (fadingPositionStreamVolume <= 0) {
-
-                        fadingPositionStreamVolume = 0f
-                        terminalStreams.add(fadingPositionStreamID)
-                        fadingPositionStreamID = 0
-
-                        delay(SOUND_UPDATE_DELAY_MS.milliseconds)
-                        continue
-                    }
-
-                    // Fading out a position being replaced with a new one
-                    if (activePostion > -1)
-                        fadingPositionStreamVolume -= MAX_VOLUME * SOUND_UPDATE_DELAY_MS / NOTE_TRANSITION_TIME_MS
-                    // Lifting last finger
-                    else /*if (activePostion == -1)*/
-                        fadingPositionStreamVolume -= MAX_VOLUME * SOUND_UPDATE_DELAY_MS / LIFT_BOW_FADE_OUT_TIME_MS
-
-//                    Log.w("SoundManager", "From manageFadingPositionStream:")
-                    setVolume(fadingPositionStreamID, max(0f, fadingPositionStreamVolume))
-
-                    delay(SOUND_UPDATE_DELAY_MS.milliseconds)
-                }
+                manageString(ViolinString.D)
             }
         }
     }
 
-    suspend fun manageFadingStringStream () {
+    suspend fun manageAString () {
 
         withContext(defaultDispatcher) {
-
             launch {
-
-                while (true) {
-
-                    if (fadingStringStreamID == 0) {
-                        delay(SOUND_UPDATE_DELAY_MS.milliseconds)
-                        continue
-                    }
-
-                    if (fadingStringStreamVolume <= 0) {
-
-                        fadingStringStreamVolume = 0f
-                        terminalStreams.add(fadingStringStreamID)
-                        fadingStringStreamID = 0
-
-                        delay(SOUND_UPDATE_DELAY_MS.milliseconds)
-                        continue
-                    }
-
-                    fadingStringStreamVolume -= MAX_VOLUME * SOUND_UPDATE_DELAY_MS / LIFT_BOW_FADE_OUT_TIME_MS
-
-//                    Log.w("SoundManager", "From manageFadingStringStream:")
-                    setVolume(fadingStringStreamID, max(0f, fadingStringStreamVolume))
-
-                    delay(SOUND_UPDATE_DELAY_MS.milliseconds)
-                }
+                manageString(ViolinString.A)
             }
         }
     }
 
-    suspend fun manageTerminalStreams () {
+    suspend fun manageEString () {
 
         withContext(defaultDispatcher) {
-
             launch {
-
-                while (true) {
-
-                    if (terminalStreams.isNotEmpty())
-                        stop(terminalStreams.removeFirst())
-
-                    delay(SOUND_UPDATE_DELAY_MS.milliseconds)
-                }
+                manageString(ViolinString.E)
             }
         }
     }
 
-    private fun play (violinString: ViolinString, buttonNumber: Int, volume: Float = MAX_VOLUME) : Int {
+    private fun play (violinString: ViolinString, buttonNumber: Int, volume: Float = 0f) : Int {
 
         val streamID = soundPool.play(
             noteSoundFileHashMap[violinString.ordinal * 100 + buttonNumber]!!,
@@ -255,14 +206,14 @@ class SoundManager (context: Context) {
             1f
         )
 
-//        Log.w("SoundManager", "Started $streamID")
+        Log.w("SoundManager", "Started $streamID")
 
         return streamID
     }
 
     private fun stop (streamID: Int) {
         soundPool.stop(streamID)
-//        Log.w("SoundManager", "Stopped $streamID.")
+        Log.w("SoundManager", "Stopped $streamID.")
     }
 
     private fun setVolume (streamID: Int, newVolume: Float) {
