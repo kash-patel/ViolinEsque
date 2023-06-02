@@ -24,14 +24,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -43,12 +41,12 @@ import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModelProvider
 import com.kashithekash.violinesque.ui.theme.ViolinEsqueTheme
-import kotlinx.coroutines.coroutineScope
 
 private val G_STRING_NOTES: Array<String> =
     arrayOf("G", "G#", "A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G")
@@ -59,25 +57,10 @@ private val A_STRING_NOTES: Array<String> =
 private val E_STRING_NOTES: Array<String> =
     arrayOf("E", "F", "F#", "G", "G#", "A", "A#", "B", "C", "C#", "D", "D#", "E")
 
-val defaultInteractabilityArray: Array<Interactability> = arrayOf(
-    Interactability.ENABLED,
-    Interactability.ENABLED,
-    Interactability.ENABLED,
-    Interactability.ENABLED,
-    Interactability.ENABLED,
-    Interactability.ENABLED,
-    Interactability.ENABLED,
-    Interactability.ENABLED,
-    Interactability.ENABLED,
-    Interactability.ENABLED,
-    Interactability.ENABLED,
-    Interactability.ENABLED,
-    Interactability.ENABLED
-)
-
 class PlayModeActivity : ComponentActivity() {
 
     private lateinit var playModeActivityViewModel: PlayModeActivityViewModel
+    private val configIterationLiveData: MutableLiveData<Int> = MutableLiveData(0)
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -95,18 +78,20 @@ class PlayModeActivity : ComponentActivity() {
         setContent {
             ViolinEsqueTheme {
 
+                val configUpdateNum = configIterationLiveData.observeAsState(0)
+                Log.w("PlayMode", "Config iteration ${configUpdateNum.value}.")
+
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = ViolinEsqueTheme.colors.background
                 ) {
                     PlayMode(
-                        playModeActivityViewModel.getConfigStateLiveData(),
+                        configIterationLiveData,
                         playModeActivityViewModel.getCurrentStringLiveData(),
                         { n -> playModeActivityViewModel.buttonTouched(n) },
                         { n -> playModeActivityViewModel.buttonReleased(n) },
-                        { s -> playModeActivityViewModel.stringChanged(s) },
-                        { playModeActivityViewModel.getButtonInteractabilityArray() }
+                        { n -> playModeActivityViewModel.getButtonInteractability(n) }
                     )
                 }
             }
@@ -119,6 +104,7 @@ class PlayModeActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        configIterationLiveData.value = configIterationLiveData.value!!.plus(1)
     }
 
     override fun onPause() {
@@ -137,28 +123,14 @@ class PlayModeActivity : ComponentActivity() {
 
 @Composable
 fun PlayMode (
-    configStateLiveData: LiveData<Long>,
+    configIterationLiveData: LiveData<Int>,
     currentStringLiveData: LiveData<ViolinString>,
     onButtonTouched: (Int) -> Unit,
     onButtonReleased: (Int) -> Unit,
-    onStringChanged: (ViolinString) -> Unit,
-    getButtonInteractabilities: () -> Array<Interactability>,
+    getButtonInteractability: (Int) -> Interactability,
     modifier: Modifier = Modifier
 ) {
-
-    val configState by configStateLiveData.observeAsState(0f)
-    val currentString by currentStringLiveData.observeAsState(ViolinString.A)
-
-    var buttonInteractabilityArray: Array<Interactability> by remember { mutableStateOf(getButtonInteractabilities()) }
-
-    LaunchedEffect(currentString) {
-        onStringChanged(currentString)
-    }
-
-    LaunchedEffect(configState) {
-        Log.w("PlayMode", "Config changed!")
-        buttonInteractabilityArray = getButtonInteractabilities()
-    }
+    Log.w("PlayMode", "Config changed!")
 
     Column (modifier = modifier
         .fillMaxSize()
@@ -170,37 +142,22 @@ fun PlayMode (
         ) {
             SideBar()
             Spacer(modifier = modifier.width(10.dp))
-            BoxWithConstraints (modifier = modifier
-                .fillMaxHeight()
-                .weight(1f)) {
-                if (buttonInteractabilityArray[0] == Interactability.ENABLED) {
-                    OpenStringButton_Enabled(
-                        currentStringLiveData,
-                        { s, n -> onButtonTouched(n) },
-                        { s, n -> onButtonReleased(n) },
-                        modifier
-                    )
-                } else { OpenStringButton_Disabled() }
-                StringsContainer(currentStringLiveData)
-            }
+            OpenStringButtonContainer(
+                currentStringLiveData,
+                { onButtonTouched(0) },
+                { onButtonReleased(0) },
+                getButtonInteractability(0) == Interactability.ENABLED,
+                modifier
+            )
             Spacer(modifier = modifier.width(5.dp))
-            Column (
-                modifier = modifier
-                    .weight(1f)
-            ) {
-                for (i in 1..12) {
-                    if (buttonInteractabilityArray[i] == Interactability.ENABLED) {
-                        FingerPositionButton_Enabled(
-                            i, currentStringLiveData,
-                            { s, n -> onButtonTouched(n) },
-                            { s, n -> onButtonReleased(n) },
-                            modifier
-                        )
-                    } else if (buttonInteractabilityArray[i] == Interactability.DISABLED) {
-                        FingerPositionButton_Disabled()
-                    } else { /* Hidden */ }
-                }
-            }
+            FingerPositionButtonsContainer(
+//                configIterationLiveData,
+                { n -> getButtonInteractability(n) },
+                currentStringLiveData,
+                { n -> onButtonTouched(n) },
+                { n -> onButtonReleased(n) },
+                modifier
+            )
         }
     }
 }
@@ -213,8 +170,6 @@ fun SideBar (modifier: Modifier = Modifier) {
             .width(50.dp)
     ) {
         Spacer(modifier = modifier.weight(1f))
-        InfoButton(modifier = modifier)
-        Spacer(modifier = modifier.height(30.dp))
         LayoutConfigButton(modifier = modifier)
         Spacer(modifier = modifier.height(30.dp))
         CalibrationSettingsButton(modifier = modifier)
@@ -259,29 +214,35 @@ fun CalibrationSettingsButton (modifier: Modifier) {
 }
 
 @Composable
-fun InfoButton (modifier: Modifier) {
+fun RowScope.OpenStringButtonContainer (
+    currentStringLiveData: LiveData<ViolinString>,
+    onButtonTouched: () -> Unit,
+    onButtonReleased: () -> Unit,
+    enabled: Boolean,
+    modifier: Modifier
+) {
 
-    val context : Context = LocalContext.current
-
-    IconButton (
-        onClick = { context.startActivity(Intent(context, InfoActivity::class.java)) },
-        modifier = modifier.fillMaxWidth()
+    BoxWithConstraints (modifier = modifier
+        .fillMaxSize()
+        .weight(1f)
     ) {
-        Icon(
-            imageVector = Icons.Default.Info,
-            contentDescription = "Info",
-            tint = ViolinEsqueTheme.colors.textButton,
-            modifier = modifier
-                .size(30.dp)
-        )
+        if (enabled) {
+            OpenStringButtonEnabled(
+                currentStringLiveData,
+                { onButtonTouched() },
+                { onButtonReleased() },
+                modifier
+            )
+        } else { OpenStringButtonDisabled() }
+        StringsContainer(currentStringLiveData)
     }
 }
 
 @Composable
-fun OpenStringButton_Enabled (
+fun OpenStringButtonEnabled (
     currentStringLiveData: LiveData<ViolinString>,
-    handleButtonTouched: (ViolinString, Int) -> Unit,
-    handleButtonReleased: (ViolinString, Int) -> Unit,
+    handleButtonTouched: () -> Unit,
+    handleButtonReleased: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val currentString: ViolinString by currentStringLiveData.observeAsState(initial = ViolinString.A)
@@ -296,7 +257,7 @@ fun OpenStringButton_Enabled (
 
                     awaitFirstDown()
                     isTouched = true
-                    handleButtonTouched(currentString, 0)
+                    handleButtonTouched()
 
                     do {
                         val event = awaitPointerEvent()
@@ -306,7 +267,7 @@ fun OpenStringButton_Enabled (
                     } while (event.changes.any { it.pressed })
 
                     isTouched = false
-                    handleButtonReleased(currentString, 0)
+                    handleButtonReleased()
                 }
             }
         }
@@ -320,7 +281,7 @@ fun OpenStringButton_Enabled (
 }
 
 @Composable
-fun OpenStringButton_Disabled (modifier: Modifier = Modifier) {
+fun OpenStringButtonDisabled (modifier: Modifier = Modifier) {
 
     Box(modifier = modifier
         .fillMaxSize()
@@ -336,22 +297,24 @@ fun StringsContainer (currentStringLiveData: LiveData<ViolinString>, modifier: M
     Row (modifier = modifier
         .fillMaxSize()
     ) {
-        GString(currentString == ViolinString.G)
-        DString(currentString == ViolinString.D)
-        AString(currentString == ViolinString.A)
-        EString(currentString == ViolinString.E)
+        VString(isHighlighted = currentString == ViolinString.G, width = 5.dp, modifier = modifier)
+        VString(isHighlighted = currentString == ViolinString.D, width = 4.dp, modifier = modifier)
+        VString(isHighlighted = currentString == ViolinString.A, width = 3.dp, modifier = modifier)
+        VString(isHighlighted = currentString == ViolinString.E, width = 2.dp, modifier = modifier)
     }
 }
 
 @Composable
-fun RowScope.GString (isHighlighted: Boolean, modifier: Modifier = Modifier) {
+fun RowScope.VString (isHighlighted: Boolean, width: Dp, modifier: Modifier) {
+
     Box (
         modifier
             .fillMaxSize()
-            .weight(1f)) {
+            .weight(1f)
+    ) {
         Box(modifier = modifier
             .align(Alignment.Center)
-            .width(5.dp)
+            .width(width)
             .fillMaxHeight()
             .background(color = if (isHighlighted) ViolinEsqueTheme.colors.stringActive else ViolinEsqueTheme.colors.string)
         )
@@ -359,56 +322,42 @@ fun RowScope.GString (isHighlighted: Boolean, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun RowScope.DString (isHighlighted: Boolean, modifier: Modifier = Modifier) {
-    Box (
-        modifier
-            .fillMaxSize()
-            .weight(1f)) {
-        Box(modifier = modifier
-            .align(Alignment.Center)
-            .width(4.dp)
-            .fillMaxHeight()
-            .background(color = if (isHighlighted) ViolinEsqueTheme.colors.stringActive else ViolinEsqueTheme.colors.string)
-        )
-    }
-}
-
-@Composable
-fun RowScope.AString (isHighlighted: Boolean, modifier: Modifier = Modifier) {
-    Box (
-        modifier
-            .fillMaxSize()
-            .weight(1f)) {
-        Box(modifier = modifier
-            .align(Alignment.Center)
-            .width(3.dp)
-            .fillMaxHeight()
-            .background(color = if (isHighlighted) ViolinEsqueTheme.colors.stringActive else ViolinEsqueTheme.colors.string)
-        )
-    }
-}
-
-@Composable
-fun RowScope.EString (isHighlighted: Boolean, modifier: Modifier = Modifier) {
-    Box (modifier = modifier
-            .fillMaxSize()
-            .weight(1f)) {
-        Box(modifier = modifier
-            .align(Alignment.Center)
-            .width(2.dp)
-            .fillMaxHeight()
-            .background(color = if (isHighlighted) ViolinEsqueTheme.colors.stringActive else ViolinEsqueTheme.colors.string)
-        )
-    }
-}
-
-@Composable
-fun ColumnScope.FingerPositionButton_Enabled (
-    buttonNum: Int,
+fun RowScope.FingerPositionButtonsContainer (
+//    configIterationLiveData: LiveData<Int>,
+    getButtonInteractability: (Int) -> Interactability,
     currentStringLiveData: LiveData<ViolinString>,
-    handleButtonTouched: (ViolinString, Int) -> Unit,
-    handleButtonReleased: (ViolinString, Int) -> Unit,
-    modifier: Modifier = Modifier
+    onButtonTouched: (Int) -> Unit,
+    onButtonReleased: (Int) -> Unit,
+    modifier: Modifier
+) {
+
+//    val configIteration = configIterationLiveData.observeAsState(0)
+//    Log.w("PlayMode", "Config iteration $configIteration.")
+
+    Column (modifier = modifier.weight(1f)) {
+        for (i in 1..12) {
+            if (getButtonInteractability(i) == Interactability.ENABLED) {
+                Log.w("PlayMode", "Created button $i.")
+                FingerPositionButtonEnabled(
+                    i, currentStringLiveData,
+                    { n -> onButtonTouched(n) },
+                    { n -> onButtonReleased(n) },
+                    modifier
+                )
+            } else if (getButtonInteractability(i) == Interactability.DISABLED) {
+                FingerPositionButtonDisabled()
+            } else { /* Hidden */ }
+        }
+    }
+}
+
+@Composable
+fun ColumnScope.FingerPositionButtonEnabled (
+    position: Int,
+    currentStringLiveData: LiveData<ViolinString>,
+    handleButtonTouched: (Int) -> Unit,
+    handleButtonReleased: (Int) -> Unit,
+    modifier: Modifier
 ) {
     val currentString: ViolinString by currentStringLiveData.observeAsState(initial = ViolinString.A)
     var isTouched by remember { mutableStateOf(false) }
@@ -425,7 +374,8 @@ fun ColumnScope.FingerPositionButton_Enabled (
 
                     awaitFirstDown()
                     isTouched = true
-                    handleButtonTouched(currentString, buttonNum)
+                    handleButtonTouched(position)
+                    Log.w("PlayMode", "Touched button $position.")
 
                     do {
                         val event = awaitPointerEvent()
@@ -435,16 +385,16 @@ fun ColumnScope.FingerPositionButton_Enabled (
                     } while (event.changes.any { it.pressed })
 
                     isTouched = false
-                    handleButtonReleased(currentString, buttonNum)
+                    handleButtonReleased(position)
                 }
             }
         }
     ) {
         val noteString = when (currentString) {
-            ViolinString.G -> G_STRING_NOTES[buttonNum]
-            ViolinString.D -> D_STRING_NOTES[buttonNum]
-            ViolinString.A -> A_STRING_NOTES[buttonNum]
-            ViolinString.E -> E_STRING_NOTES[buttonNum]
+            ViolinString.G -> G_STRING_NOTES[position]
+            ViolinString.D -> D_STRING_NOTES[position]
+            ViolinString.A -> A_STRING_NOTES[position]
+            ViolinString.E -> E_STRING_NOTES[position]
         }
 
         Text(
@@ -456,7 +406,7 @@ fun ColumnScope.FingerPositionButton_Enabled (
 }
 
 @Composable
-fun ColumnScope.FingerPositionButton_Disabled (modifier: Modifier = Modifier) {
+fun ColumnScope.FingerPositionButtonDisabled (modifier: Modifier = Modifier) {
 
     Box (modifier = modifier
         .fillMaxSize()
@@ -470,12 +420,11 @@ fun ColumnScope.FingerPositionButton_Disabled (modifier: Modifier = Modifier) {
 fun PlayModePreview() {
     ViolinEsqueTheme {
         PlayMode(
-            MutableLiveData<Long>(0),
+            MutableLiveData(0),
             MutableLiveData(ViolinString.A),
             { n -> doNothing(n) },
             { n -> doNothing(n) },
-            { s -> doNothing(0) },
-            { defaultInteractabilityArray }
+            { n -> Interactability.ENABLED }
         )
     }
 }

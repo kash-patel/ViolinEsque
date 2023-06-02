@@ -12,35 +12,27 @@ class PlayModeActivityViewModel(application: Application) : AndroidViewModel(app
 
     private val rotationReader : RotationReader = RotationReader(context = application)
     private val stringManager : StringManager = StringManager()
-//    private val soundManager : SoundManager = SoundManager(context = application)
     private val soundManagerStringBased : SoundManagerStringBased = SoundManagerStringBased(context = application)
 
-    private var currentString: MutableLiveData<ViolinString> = MutableLiveData<ViolinString>(ViolinString.A)
+    private var currentStringLiveData: MutableLiveData<ViolinString> = MutableLiveData<ViolinString>(ViolinString.A)
+    private var cachedString: ViolinString? = null
 
     private val config: Config = Config
     private val prefRepo: PrefRepo = PrefRepo(application.applicationContext)
 
     fun buttonTouched (buttonNumber: Int) {
-//        soundManager.handleButtonTouch(buttonNumber)
         soundManagerStringBased.handleButtonTouch(buttonNumber)
     }
 
     fun buttonReleased (buttonNumber: Int) {
-//        soundManager.handleButtonRelease(buttonNumber)
         soundManagerStringBased.handleButtonRelease(buttonNumber)
     }
 
     fun stringChanged (newString: ViolinString) {
-//        soundManager.handleStringChange(newString)
         soundManagerStringBased.handleStringChange(newString)
     }
 
     fun monitorStrings () {
-//        viewModelScope.launch { soundManager.manageActiveStream() }
-//        viewModelScope.launch { soundManager.manageFadingPositionStream() }
-//        viewModelScope.launch { soundManager.manageFadingStringStream() }
-//        viewModelScope.launch { soundManager.manageTerminalStreams() }
-
         viewModelScope.launch { soundManagerStringBased.manageGString() }
         viewModelScope.launch { soundManagerStringBased.manageDString() }
         viewModelScope.launch { soundManagerStringBased.manageAString() }
@@ -48,18 +40,19 @@ class PlayModeActivityViewModel(application: Application) : AndroidViewModel(app
     }
 
     fun updateRoll (roll : Float) {
-        currentString.value = stringManager.calculateCurrentString(roll)
+        currentStringLiveData.value = stringManager.calculateCurrentString(roll)
+        if (currentStringLiveData.value != cachedString) {
+            cachedString = currentStringLiveData.value
+            stringChanged(cachedString!!)
+        }
     }
 
     fun getCurrentStringLiveData () : LiveData<ViolinString> {
-        return currentString
+        return currentStringLiveData
     }
 
-    fun getConfigStateLiveData () : LiveData<Long> {
-        return config.configState
-    }
-    fun getButtonInteractabilityArray () : Array<Interactability> {
-        return config.buttonInteractabilities
+    fun getButtonInteractability (buttonNumber: Int) : Interactability {
+        return config.buttonInteractabilityArray[buttonNumber]
     }
 
     fun getRotationVector () = rotationReader
@@ -86,7 +79,6 @@ class PlayModeActivityViewModel(application: Application) : AndroidViewModel(app
     }
 
     fun releaseResources () {
-//        soundManager.release()
         soundManagerStringBased.release()
     }
 }

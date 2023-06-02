@@ -1,13 +1,11 @@
 package com.kashithekash.violinesque
 
-import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -25,10 +23,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.kashithekash.violinesque.ui.theme.ViolinEsqueTheme
 
 class LayoutConfigActivity : ComponentActivity() {
@@ -89,7 +85,7 @@ fun LayoutConfigScreen (
             Box (modifier = modifier
                 .fillMaxHeight()
                 .weight(1f)) {
-                OpenStringButton(
+                OpenStringButtonContainer(
                     getInteractability(0),
                     { n, i -> setInteractability(n, i) },
                     modifier = modifier
@@ -114,7 +110,7 @@ fun LayoutConfigScreen (
 }
 
 @Composable
-fun OpenStringButton (
+fun OpenStringButtonContainer (
     initialInteractability: Interactability,
     onInteractabilityChange: (Int, Interactability) -> Unit,
     modifier: Modifier = Modifier

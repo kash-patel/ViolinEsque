@@ -15,8 +15,7 @@ class LayoutConfigActivityViewModel(application: Application) : AndroidViewModel
     private val config: Config = Config
 
     fun setButtonInteractability (buttonNumber: Int, newInteractability: Interactability) {
-        config.buttonInteractabilities[buttonNumber] = newInteractability
-        config.configState.postValue(System.currentTimeMillis())
+        config.buttonInteractabilityArray[buttonNumber] = newInteractability
         prefRepo.setButtonInteractability(buttonNumber, newInteractability)
     }
 

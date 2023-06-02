@@ -22,25 +22,16 @@ class InfoActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = ViolinEsqueTheme.colors.background
                 ) {
-                    Greeting("Android")
+
                 }
             }
         }
     }
 }
 
+@Preview
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+fun InfoActivityScreen () {
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    ViolinEsqueTheme {
-        Greeting("Android")
-    }
+
 }

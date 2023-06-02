@@ -11,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.exp
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.time.Duration.Companion.milliseconds
@@ -19,13 +20,12 @@ private const val SOUND_UPDATE_DELAY_MS = 10
 private const val MAX_VOLUME : Float = 1f
 private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default
 
-private const val START_BOWING_FADE_IN_TIME_MS = 30
+private const val START_BOWING_FADE_IN_TIME_MS = 10
 private const val NOTE_TRANSITION_TIME_MS = 50
 private const val PLACE_MOVING_BOW_FADE_IN_TIME_MS = 10
 private const val LIFT_BOW_FADE_OUT_TIME_MS = 100
 
 private val isButtonTouched: BooleanArray = booleanArrayOf(false, false, false, false, false, false, false, false, false, false, false, false, false)
-//private val isStringActive: BooleanArray = booleanArrayOf(false, false, true, false)
 private var activeString: ViolinString? = null
 private var activePosition: Int = -1
 
@@ -195,15 +195,32 @@ class SoundManagerStringBased (context: Context) {
         }
     }
 
-    private fun play (violinString: ViolinString, buttonNumber: Int, volume: Float = 0f) : Int {
+    private fun play (string: ViolinString, position: Int, volume: Float = 0f) : Int {
 
+//        val streamID = soundPool.play(
+//            noteSoundFileHashMap[violinString.ordinal * 100 + buttonNumber]!!,
+//            volume,
+//            volume,
+//            0,
+//            -1,
+//            1f
+//        )
+
+        /*
+        Trying out dynamically produced sound centred around A4 (440 Hz).
+
+        Each semitone is a 100 cent interval, and since an octave has 12 semitones,
+        there are 1200 cents per octave, so 1 cent = 1 / 12 octaves.
+
+        So, a note n semitones from A4 has the rate 2^(n / 12).
+        */
         val streamID = soundPool.play(
-            noteSoundFileHashMap[violinString.ordinal * 100 + buttonNumber]!!,
+            noteSoundFileHashMap[200]!!,
             volume,
             volume,
             0,
             -1,
-            1f
+            Math.pow(2.0, (((string.ordinal - ViolinString.A.ordinal) * 7.0 + position) / 12)).toFloat()
         )
 
         Log.w("SoundManager", "Started $streamID")
