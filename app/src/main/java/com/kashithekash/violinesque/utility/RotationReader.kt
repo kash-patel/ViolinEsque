@@ -1,4 +1,4 @@
-package com.kashithekash.violinesque
+package com.kashithekash.violinesque.utility
 
 import android.app.Activity
 import android.content.Context

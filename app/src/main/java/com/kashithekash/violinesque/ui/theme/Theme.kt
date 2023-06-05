@@ -40,14 +40,16 @@ private val LightColorScheme = ViolinEsqueColors(
     fingerboardTouched = AlmostWhite,
     button = Color.Transparent,
     buttonTouched = AlmostWhite,
-    string = LightGrey,
-    stringActive = LightBlue,
+    string = DarkWhite,
+//    stringActive = LightBlue,
+    stringActive = LightOrange,
     sliderBackground = LightGrey,
     sliderThumb = LightBlack,
-    text = LightGrey,
+    text = LightBlack,
     textAlt = DarkWhite,
-    textButton = LightGrey,
-    textButtonTouched = LightBlue,
+    textButton = LightBlack,
+//    textButtonTouched = LightBlue,
+    textButtonTouched = LightOrange,
     isDark = false
 )
 

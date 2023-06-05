@@ -13,32 +13,12 @@
         android:theme="@style/Theme.ViolinEsque"
         tools:targetApi="33">
         <activity
-            android:name=".LayoutConfigActivity"
-            android:exported="false"
-            android:label="@string/title_activity_layout_config"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.ViolinEsque" />
-        <activity
-            android:name=".CalibrationSettingsActivity"
-            android:exported="false"
-            android:label="@string/title_activity_calibration_settings"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.ViolinEsque" />
-        <activity
-            android:name=".InfoActivity"
-            android:exported="false"
-            android:label="@string/title_activity_info"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.ViolinEsque" />
-        <activity
-            android:name=".PlayModeActivity"
+            android:name=".ViolinEsqueActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.ViolinEsque">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
