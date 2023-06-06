@@ -6,9 +6,9 @@ object Config {
         private set
     var stringRollRange: Float = 45f
         private set
-    var pitchCentre: Float = -45f
+    var pitchCentre: Float = -22.55f
         private set
-    var totalPitchRange: Float = -90f
+    var totalPitchRange: Float = -45f
         private set
     var expandButtons: Boolean = false
         private set
@@ -24,7 +24,7 @@ object Config {
         savedStringRollRange: Float,
         savedPitchCentre: Float,
         savedTotalPitchRange: Float,
-        savedExpandbuttons: Boolean,
+        savedExpandButtons: Boolean,
         savedInvertRoll: Boolean,
         savedInvertPitch: Boolean,
         savedHandPositionsList: List<Int>
@@ -34,7 +34,7 @@ object Config {
         stringRollRange = savedStringRollRange
         pitchCentre = savedPitchCentre
         totalPitchRange = savedTotalPitchRange
-        expandButtons = savedExpandbuttons
+        expandButtons = savedExpandButtons
         invertRoll = savedInvertRoll
         invertPitch = savedInvertPitch
         handPositionsList = savedHandPositionsList

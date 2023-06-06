@@ -252,5 +252,5 @@ fun AddHandPositionCard(
 }
 
 private val SettingRowHeight: Dp = 60.dp
-private val LowestPosition: Int = 1
-private val HighestPosition: Int = 15
+private const val LowestPosition: Int = 1
+private const val HighestPosition: Int = 14

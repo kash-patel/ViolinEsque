@@ -20,7 +20,7 @@ private const val SOUND_UPDATE_DELAY_MS = 10
 private const val MAX_VOLUME : Float = 1f
 private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default
 
-private const val START_BOWING_FADE_IN_TIME_MS = 10
+private const val START_BOWING_FADE_IN_TIME_MS = 50
 private const val NOTE_TRANSITION_TIME_MS = 50
 private const val PLACE_MOVING_BOW_FADE_IN_TIME_MS = 10
 private const val LIFT_BOW_FADE_OUT_TIME_MS = 100
@@ -206,17 +206,20 @@ class SoundManagerStringBased (context: Context) {
         Trying out dynamically produced sound centred around A4 (440 Hz).
 
         Each semitone is a 100 cent interval, and since an octave has 12 semitones,
-        there are 1200 cents per octave, so 1 cent = 1 / 12 octaves.
+        there are 1200 cents per octave, so 100 cents = 1 / 12 octaves.
 
         So, a note n semitones from A4 has the rate 2^(n / 12).
         */
+
+        val noteMapKey: Int = string.ordinal * 10 + position / 12
         val streamID = soundPool.play(
-            noteSoundFileHashMap[200]!!,
+            noteSoundFileHashMap[noteMapKey]!!,
             volume,
             volume,
             0,
             -1,
-            Math.pow(2.0, (((string.ordinal - ViolinString.A.ordinal) * 7.0 + position) / 12)).toFloat()
+            Math.pow(2.0, (position % 12) / 12.0).toFloat()
+//            Math.pow(2.0, (((string.ordinal - ViolinString.A.ordinal) * 7.0 + position) / 12)).toFloat()
         )
 
         Log.w("SoundManager", "Started $streamID")
@@ -250,61 +253,21 @@ class SoundManagerStringBased (context: Context) {
 
     private fun loadSoundFiles (context: Context) {
 
-        noteSoundFileHashMap[ViolinString.G.ordinal * 100] = soundPool.load(context, R.raw.g3, 0)
-        noteSoundFileHashMap[ViolinString.G.ordinal * 100 + 1] = soundPool.load(context, R.raw.gsharp3, 0)
-        noteSoundFileHashMap[ViolinString.G.ordinal * 100 + 2] = soundPool.load(context, R.raw.a3, 0)
-        noteSoundFileHashMap[ViolinString.G.ordinal * 100 + 3] = soundPool.load(context, R.raw.asharp3, 0)
-        noteSoundFileHashMap[ViolinString.G.ordinal * 100 + 4] = soundPool.load(context, R.raw.b3, 0)
-        noteSoundFileHashMap[ViolinString.G.ordinal * 100 + 5] = soundPool.load(context, R.raw.c4, 0)
-        noteSoundFileHashMap[ViolinString.G.ordinal * 100 + 6] = soundPool.load(context, R.raw.csharp4, 0)
-        noteSoundFileHashMap[ViolinString.G.ordinal * 100 + 7] = soundPool.load(context, R.raw.d4, 0)
-        noteSoundFileHashMap[ViolinString.G.ordinal * 100 + 8] = soundPool.load(context, R.raw.dsharp4, 0)
-        noteSoundFileHashMap[ViolinString.G.ordinal * 100 + 9] = soundPool.load(context, R.raw.e4, 0)
-        noteSoundFileHashMap[ViolinString.G.ordinal * 100 + 10] = soundPool.load(context, R.raw.f4, 0)
-        noteSoundFileHashMap[ViolinString.G.ordinal * 100 + 11] = soundPool.load(context, R.raw.fsharp4, 0)
-        noteSoundFileHashMap[ViolinString.G.ordinal * 100 + 12] = soundPool.load(context, R.raw.g4, 0)
+        noteSoundFileHashMap[ViolinString.G.ordinal * 10] = soundPool.load(context, R.raw.g_g3, 0)
+        noteSoundFileHashMap[ViolinString.G.ordinal * 10 + 1] = soundPool.load(context, R.raw.g_g4, 0)
+        noteSoundFileHashMap[ViolinString.G.ordinal * 10 + 2] = soundPool.load(context, R.raw.g_g5, 0)
 
-        noteSoundFileHashMap[ViolinString.D.ordinal * 100] = soundPool.load(context, R.raw.d4, 0)
-        noteSoundFileHashMap[ViolinString.D.ordinal * 100 + 1] = soundPool.load(context, R.raw.dsharp4, 0)
-        noteSoundFileHashMap[ViolinString.D.ordinal * 100 + 2] = soundPool.load(context, R.raw.e4, 0)
-        noteSoundFileHashMap[ViolinString.D.ordinal * 100 + 3] = soundPool.load(context, R.raw.f4, 0)
-        noteSoundFileHashMap[ViolinString.D.ordinal * 100 + 4] = soundPool.load(context, R.raw.fsharp4, 0)
-        noteSoundFileHashMap[ViolinString.D.ordinal * 100 + 5] = soundPool.load(context, R.raw.g4, 0)
-        noteSoundFileHashMap[ViolinString.D.ordinal * 100 + 6] = soundPool.load(context, R.raw.gsharp4, 0)
-        noteSoundFileHashMap[ViolinString.D.ordinal * 100 + 7] = soundPool.load(context, R.raw.a4, 0)
-        noteSoundFileHashMap[ViolinString.D.ordinal * 100 + 8] = soundPool.load(context, R.raw.asharp4, 0)
-        noteSoundFileHashMap[ViolinString.D.ordinal * 100 + 9] = soundPool.load(context, R.raw.b4, 0)
-        noteSoundFileHashMap[ViolinString.D.ordinal * 100 + 10] = soundPool.load(context, R.raw.c5, 0)
-        noteSoundFileHashMap[ViolinString.D.ordinal * 100 + 11] = soundPool.load(context, R.raw.csharp5, 0)
-        noteSoundFileHashMap[ViolinString.D.ordinal * 100 + 12] = soundPool.load(context, R.raw.d5, 0)
+        noteSoundFileHashMap[ViolinString.D.ordinal * 10] = soundPool.load(context, R.raw.d_d4, 0)
+        noteSoundFileHashMap[ViolinString.D.ordinal * 10 + 1] = soundPool.load(context, R.raw.d_d5, 0)
+        noteSoundFileHashMap[ViolinString.D.ordinal * 10 + 2] = soundPool.load(context, R.raw.d_d6, 0)
 
-        noteSoundFileHashMap[ViolinString.A.ordinal * 100] = soundPool.load(context, R.raw.a4, 0)
-        noteSoundFileHashMap[ViolinString.A.ordinal * 100 + 1] = soundPool.load(context, R.raw.asharp4, 0)
-        noteSoundFileHashMap[ViolinString.A.ordinal * 100 + 2] = soundPool.load(context, R.raw.b4, 0)
-        noteSoundFileHashMap[ViolinString.A.ordinal * 100 + 3] = soundPool.load(context, R.raw.c5, 0)
-        noteSoundFileHashMap[ViolinString.A.ordinal * 100 + 4] = soundPool.load(context, R.raw.csharp5, 0)
-        noteSoundFileHashMap[ViolinString.A.ordinal * 100 + 5] = soundPool.load(context, R.raw.d5, 0)
-        noteSoundFileHashMap[ViolinString.A.ordinal * 100 + 6] = soundPool.load(context, R.raw.dsharp5, 0)
-        noteSoundFileHashMap[ViolinString.A.ordinal * 100 + 7] = soundPool.load(context, R.raw.e5, 0)
-        noteSoundFileHashMap[ViolinString.A.ordinal * 100 + 8] = soundPool.load(context, R.raw.f5, 0)
-        noteSoundFileHashMap[ViolinString.A.ordinal * 100 + 9] = soundPool.load(context, R.raw.fsharp5, 0)
-        noteSoundFileHashMap[ViolinString.A.ordinal * 100 + 10] = soundPool.load(context, R.raw.g5, 0)
-        noteSoundFileHashMap[ViolinString.A.ordinal * 100 + 11] = soundPool.load(context, R.raw.gsharp5, 0)
-        noteSoundFileHashMap[ViolinString.A.ordinal * 100 + 12] = soundPool.load(context, R.raw.a5, 0)
+        noteSoundFileHashMap[ViolinString.A.ordinal * 10] = soundPool.load(context, R.raw.a_a4, 0)
+        noteSoundFileHashMap[ViolinString.A.ordinal * 10 + 1] = soundPool.load(context, R.raw.a_a5, 0)
+        noteSoundFileHashMap[ViolinString.A.ordinal * 10 + 2] = soundPool.load(context, R.raw.a_a6, 0)
 
-        noteSoundFileHashMap[ViolinString.E.ordinal * 100] = soundPool.load(context, R.raw.e5, 0)
-        noteSoundFileHashMap[ViolinString.E.ordinal * 100 + 1] = soundPool.load(context, R.raw.f5, 0)
-        noteSoundFileHashMap[ViolinString.E.ordinal * 100 + 2] = soundPool.load(context, R.raw.fsharp5, 0)
-        noteSoundFileHashMap[ViolinString.E.ordinal * 100 + 3] = soundPool.load(context, R.raw.g5, 0)
-        noteSoundFileHashMap[ViolinString.E.ordinal * 100 + 4] = soundPool.load(context, R.raw.gsharp5, 0)
-        noteSoundFileHashMap[ViolinString.E.ordinal * 100 + 5] = soundPool.load(context, R.raw.a5, 0)
-        noteSoundFileHashMap[ViolinString.E.ordinal * 100 + 6] = soundPool.load(context, R.raw.asharp5, 0)
-        noteSoundFileHashMap[ViolinString.E.ordinal * 100 + 7] = soundPool.load(context, R.raw.b5, 0)
-        noteSoundFileHashMap[ViolinString.E.ordinal * 100 + 8] = soundPool.load(context, R.raw.c6, 0)
-        noteSoundFileHashMap[ViolinString.E.ordinal * 100 + 9] = soundPool.load(context, R.raw.csharp6, 0)
-        noteSoundFileHashMap[ViolinString.E.ordinal * 100 + 10] = soundPool.load(context, R.raw.d6, 0)
-        noteSoundFileHashMap[ViolinString.E.ordinal * 100 + 11] = soundPool.load(context, R.raw.dsharp6, 0)
-        noteSoundFileHashMap[ViolinString.E.ordinal * 100 + 12] = soundPool.load(context, R.raw.e6, 0)
+        noteSoundFileHashMap[ViolinString.E.ordinal * 10] = soundPool.load(context, R.raw.e_e5, 0)
+        noteSoundFileHashMap[ViolinString.E.ordinal * 10 + 1] = soundPool.load(context, R.raw.e_e6, 0)
+        noteSoundFileHashMap[ViolinString.E.ordinal * 10 + 2] = soundPool.load(context, R.raw.e_e7, 0)
     }
 
     fun release () {

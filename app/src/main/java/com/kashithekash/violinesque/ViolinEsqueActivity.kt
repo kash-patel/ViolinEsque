@@ -45,7 +45,7 @@ class ViolinEsqueActivity : ComponentActivity() {
         prefRepo = PrefRepo(this)
 
         Config.init(
-            savedExpandbuttons = prefRepo.getExpandButtons(),
+            savedExpandButtons = prefRepo.getExpandButtons(),
             savedInvertRoll = prefRepo.getInvertRoll(),
             savedInvertPitch = prefRepo.getInvertPitch(),
             savedRollCentre = prefRepo.getRollCentre(),
