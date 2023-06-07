@@ -11,8 +11,28 @@ class PrefRepo (context: Context) {
 
     private val editor = sharedPrefs.edit()
 
+    fun setFadeInTime (newFadeInTime: Int) {
+        editor.putInt("fade_in_time", newFadeInTime)
+        editor.apply()
+    }
+
+    fun setBlendTime (newBlendTime: Int) {
+        editor.putInt("blend_time", newBlendTime)
+        editor.apply()
+    }
+
+    fun setFadeOutTime (newFadeOutTime: Int) {
+        editor.putInt("fade_out_time", newFadeOutTime)
+        editor.apply()
+    }
+
+    fun setFadeOutDelay (newFadeOutDelay: Int) {
+        editor.putInt("fade_out_delay", newFadeOutDelay)
+        editor.apply()
+    }
+
     fun setExpandButtons (newExpandButtons: Boolean) {
-        editor.putBoolean("exapnd_buttons", newExpandButtons)
+        editor.putBoolean("expand_buttons", newExpandButtons)
         editor.apply()
     }
 
@@ -51,6 +71,22 @@ class PrefRepo (context: Context) {
         val json = gson.toJson(newhandPositions)
         editor.putString("hand_positions_list", json)
         editor.apply()
+    }
+
+    fun getFadeInTime () : Int {
+        return sharedPrefs.getInt("fade_in_time", 10)
+    }
+
+    fun getBlendTime () : Int {
+        return sharedPrefs.getInt("Blend_time", 50)
+    }
+
+    fun getFadeOutTime () : Int {
+        return sharedPrefs.getInt("fade_out_time", 100)
+    }
+
+    fun getFadeOutDelay () : Int {
+        return sharedPrefs.getInt("fade_out_delay", 0)
     }
 
     fun getRollCentre () : Float {

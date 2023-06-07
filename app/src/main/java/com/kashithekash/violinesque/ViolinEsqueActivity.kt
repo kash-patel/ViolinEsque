@@ -17,26 +17,30 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.kashithekash.violinesque.navigation.LayoutConfig
+import com.kashithekash.violinesque.navigation.AudioSettings
+import com.kashithekash.violinesque.navigation.InterfaceConfig
 import com.kashithekash.violinesque.navigation.Play
-import com.kashithekash.violinesque.navigation.TiltSettings
+import com.kashithekash.violinesque.navigation.Calibration
 import com.kashithekash.violinesque.navigation.violinEsqueScreens
+import com.kashithekash.violinesque.ui.audioSettings.AudioSettingsScreen
 import com.kashithekash.violinesque.ui.components.NavBar
 import com.kashithekash.violinesque.ui.components.PositionIndicatorRail
-import com.kashithekash.violinesque.ui.layoutConfig.LayoutConfigScreen
+import com.kashithekash.violinesque.ui.interfaceConfig.InterfaceConfigScreen
 import com.kashithekash.violinesque.ui.play.PlayScreen
-import com.kashithekash.violinesque.viewmodels.LayoutViewModel
+import com.kashithekash.violinesque.viewmodels.InterfaceConfigViewModel
 import com.kashithekash.violinesque.ui.theme.ViolinEsqueTheme
-import com.kashithekash.violinesque.ui.tiltSettings.TiltSettingsScreen
+import com.kashithekash.violinesque.ui.calibration.CalibrationScreen
 import com.kashithekash.violinesque.utility.Config
 import com.kashithekash.violinesque.utility.PrefRepo
 import com.kashithekash.violinesque.utility.SoundManagerStringBased
+import com.kashithekash.violinesque.viewmodels.AudioSettingsViewModel
 import com.kashithekash.violinesque.viewmodels.OrientationViewModel
 
 class ViolinEsqueActivity : ComponentActivity() {
 
     private lateinit var orientationViewModel: OrientationViewModel
-    private lateinit var layoutViewModel: LayoutViewModel
+    private lateinit var interfaceConfigViewModel: InterfaceConfigViewModel
+    private lateinit var audioSettingsViewModel: AudioSettingsViewModel
     private lateinit var soundManagerStringBased: SoundManagerStringBased
     private lateinit var prefRepo: PrefRepo
 
@@ -45,6 +49,10 @@ class ViolinEsqueActivity : ComponentActivity() {
         prefRepo = PrefRepo(this)
 
         Config.init(
+            savedFadeInTime = prefRepo.getFadeInTime(),
+            savedBlendTime = prefRepo.getBlendTime(),
+            savedFadeOutTime = prefRepo.getFadeOutTime(),
+            savedFadeOutDelay = prefRepo.getFadeOutDelay(),
             savedExpandButtons = prefRepo.getExpandButtons(),
             savedInvertRoll = prefRepo.getInvertRoll(),
             savedInvertPitch = prefRepo.getInvertPitch(),
@@ -59,13 +67,17 @@ class ViolinEsqueActivity : ComponentActivity() {
 
         orientationViewModel =
             ViewModelProvider(this)[OrientationViewModel(application)::class.java]
-        layoutViewModel =
-            ViewModelProvider(this)[LayoutViewModel(application)::class.java]
+        interfaceConfigViewModel =
+            ViewModelProvider(this)[InterfaceConfigViewModel(application)::class.java]
+        audioSettingsViewModel =
+            ViewModelProvider(this)[AudioSettingsViewModel(application)::class.java]
 
         orientationViewModel.setSoundManager(soundManagerStringBased)
         orientationViewModel.setPrefRepo(prefRepo)
-        layoutViewModel.setSoundManager(soundManagerStringBased)
-        layoutViewModel.setPrefRepo(prefRepo)
+        interfaceConfigViewModel.setSoundManager(soundManagerStringBased)
+        interfaceConfigViewModel.setPrefRepo(prefRepo)
+        audioSettingsViewModel.setSoundManager(soundManagerStringBased)
+        audioSettingsViewModel.setPrefRepo(prefRepo)
 
         orientationViewModel.monitorStrings()
         orientationViewModel.rotationReader.observe(this) {
@@ -77,7 +89,8 @@ class ViolinEsqueActivity : ComponentActivity() {
         setContent {
             ViolinEsqueApp(
                 orientationViewModel,
-                layoutViewModel
+                interfaceConfigViewModel,
+                audioSettingsViewModel
             )
         }
     }
@@ -91,7 +104,8 @@ class ViolinEsqueActivity : ComponentActivity() {
 @Composable
 fun ViolinEsqueApp (
     orientationViewModel: OrientationViewModel,
-    layoutViewModel: LayoutViewModel
+    interfaceConfigViewModel: InterfaceConfigViewModel,
+    audioSettingsViewModel: AudioSettingsViewModel
 ) {
 
     Log.w("ViolinEsqueActivity", "Launched!")
@@ -115,13 +129,14 @@ fun ViolinEsqueApp (
 
                 PositionIndicatorRail(
                     invertPitchLiveData = orientationViewModel.invertPitchLiveData,
-                    handPositionsMutableList = layoutViewModel.handPositionsMutableList,
+                    handPositionsMutableList = interfaceConfigViewModel.handPositionsMutableList,
                     currentHandPositionIndexLiveData = orientationViewModel.currentHandPositionIndexLiveData
                 )
 
                 ViolinEsqueNavHost(
                     orientationViewModel = orientationViewModel,
-                    layoutViewModel = layoutViewModel,
+                    interfaceConfigViewModel = interfaceConfigViewModel,
+                    audioSettingsViewModel = audioSettingsViewModel,
                     navController = navController
                 )
             }
@@ -132,7 +147,8 @@ fun ViolinEsqueApp (
 @Composable
 fun ViolinEsqueNavHost(
     orientationViewModel: OrientationViewModel,
-    layoutViewModel: LayoutViewModel,
+    interfaceConfigViewModel: InterfaceConfigViewModel,
+    audioSettingsViewModel: AudioSettingsViewModel,
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
@@ -146,26 +162,39 @@ fun ViolinEsqueNavHost(
             PlayScreen(
                 currentStringLiveData = orientationViewModel.currentStringLiveData,
                 currentHandPositionIndexLiveData = orientationViewModel.currentHandPositionIndexLiveData,
-                onButtonTouch = { n -> layoutViewModel.buttonTouched(n) },
-                onButtonRelease = { n -> layoutViewModel.buttonReleased(n) },
-                expandButtonsLiveData = layoutViewModel.expandButtonsLiveData,
-                handPositionsListMutable = layoutViewModel.handPositionsMutableList
+                onButtonTouch = { n -> interfaceConfigViewModel.buttonTouched(n) },
+                onButtonRelease = { n -> interfaceConfigViewModel.buttonReleased(n) },
+                expandButtonsLiveData = interfaceConfigViewModel.expandButtonsLiveData,
+                handPositionsListMutable = interfaceConfigViewModel.handPositionsMutableList
             )
         }
 
-        composable(route = LayoutConfig.route) {
-            LayoutConfigScreen(
-                expandButtonsLiveData = layoutViewModel.expandButtonsLiveData,
-                onSetExpandButtons = { newExpandButtons -> layoutViewModel.setExpandButtons(newExpandButtons) },
-                handPositionsMutableList = layoutViewModel.handPositionsMutableList,
-                addHandPostion = { i, n -> layoutViewModel.addHandPosition(i, n) },
-                removeHandPosition = { i -> layoutViewModel.removeHandPosition(i) },
-                changeHandPosition = { i, n -> layoutViewModel.changeHandPosition(i, n) }
+        composable(route = InterfaceConfig.route) {
+            InterfaceConfigScreen(
+                expandButtonsLiveData = interfaceConfigViewModel.expandButtonsLiveData,
+                onSetExpandButtons = { newExpandButtons -> interfaceConfigViewModel.setExpandButtons(newExpandButtons) },
+                handPositionsMutableList = interfaceConfigViewModel.handPositionsMutableList,
+                addHandPostion = { i, n -> interfaceConfigViewModel.addHandPosition(i, n) },
+                removeHandPosition = { i -> interfaceConfigViewModel.removeHandPosition(i) },
+                changeHandPosition = { i, n -> interfaceConfigViewModel.changeHandPosition(i, n) }
             )
         }
 
-        composable(route = TiltSettings.route) {
-            TiltSettingsScreen(
+        composable(route = AudioSettings.route) {
+            AudioSettingsScreen(
+                getFadeInTime = { audioSettingsViewModel.getFadeInTime() },
+                onFadeInTimeChange = { newFadeInTime -> audioSettingsViewModel.setFadeInTime(newFadeInTime) },
+                getBlendTime = { audioSettingsViewModel.getBlendTime() },
+                onBlendTimeChange = { newBlendTime -> audioSettingsViewModel.setBlendTime(newBlendTime) },
+                getFadeOutTime = { audioSettingsViewModel.getFadeOutTime() },
+                onFadeOutTimeChange = { newFadeOutTime -> audioSettingsViewModel.setFadeOutTime(newFadeOutTime) },
+                getFadeOutDelay = { audioSettingsViewModel.getFadeOutDelay() },
+                onFadeOutDelayChange = { newFadeOutDelay -> audioSettingsViewModel.setFadeOutDelay(newFadeOutDelay) },
+            )
+        }
+
+        composable(route = Calibration.route) {
+            CalibrationScreen(
                 currentStringLiveData = orientationViewModel.currentStringLiveData,
                 invertRollLiveData = orientationViewModel.invertRollLiveData,
                 toggleInvertRoll = { orientationViewModel.toggleInvertRoll() },

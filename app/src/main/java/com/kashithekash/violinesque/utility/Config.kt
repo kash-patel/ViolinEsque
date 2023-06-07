@@ -2,13 +2,21 @@ package com.kashithekash.violinesque.utility
 
 object Config {
 
+    var fadeInTime: Int = 10
+        private set
+    var blendTime: Int = 50
+        private set
+    var fadeOutTime: Int = 100
+        private set
+    var fadeOutDelay: Int = 0
+        private set
     var rollCentre: Float = 0f
         private set
-    var stringRollRange: Float = 45f
+    var stringRollRange: Float = Pi / 4
         private set
-    var pitchCentre: Float = -22.55f
+    var pitchCentre: Float = -Pi.toFloat() / 8
         private set
-    var totalPitchRange: Float = -45f
+    var totalPitchRange: Float = -Pi.toFloat() / 4
         private set
     var expandButtons: Boolean = false
         private set
@@ -20,6 +28,10 @@ object Config {
         private set
 
     fun init (
+        savedFadeInTime: Int,
+        savedBlendTime: Int,
+        savedFadeOutTime: Int,
+        savedFadeOutDelay: Int,
         savedRollCentre: Float,
         savedStringRollRange: Float,
         savedPitchCentre: Float,
@@ -29,7 +41,10 @@ object Config {
         savedInvertPitch: Boolean,
         savedHandPositionsList: List<Int>
     ) {
-
+        fadeInTime = savedFadeInTime
+        blendTime = savedBlendTime
+        fadeOutTime = savedFadeOutTime
+        fadeOutDelay = savedFadeOutDelay
         rollCentre = savedRollCentre
         stringRollRange = savedStringRollRange
         pitchCentre = savedPitchCentre
@@ -38,6 +53,22 @@ object Config {
         invertRoll = savedInvertRoll
         invertPitch = savedInvertPitch
         handPositionsList = savedHandPositionsList
+    }
+
+    fun setFadeInTime (newFadeInTime: Int) {
+        fadeInTime = newFadeInTime
+    }
+
+    fun setBlendTime (newBlendTime: Int) {
+        blendTime = newBlendTime
+    }
+
+    fun setFadeOutTime (newFadeOutTime: Int) {
+        fadeOutTime = newFadeOutTime
+    }
+
+    fun setFadeOutDelay (newFadeOutDelay: Int) {
+        fadeOutDelay = newFadeOutDelay
     }
 
     fun setRollCentre (newRollCentre: Float) {

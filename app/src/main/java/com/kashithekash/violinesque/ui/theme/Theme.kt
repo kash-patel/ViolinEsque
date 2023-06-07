@@ -5,6 +5,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
@@ -23,14 +25,14 @@ private val DarkColorScheme = ViolinEsqueColors(
     fingerboardTouched = LightBlack,
     button = Color.Transparent,
     buttonTouched = LightBlack,
-    string = DarkWhite,
-    stringActive = Orange,
+    string = LightGrey,
+    stringActive = Red,
     sliderBackground = DarkGrey,
     sliderThumb = LightGrey,
     text = DarkWhite,
     textAlt = Grey,
     textButton = DarkWhite,
-    textButtonTouched = Orange,
+    textButtonTouched = Red,
     isDark = true
 )
 
@@ -41,15 +43,13 @@ private val LightColorScheme = ViolinEsqueColors(
     button = Color.Transparent,
     buttonTouched = AlmostWhite,
     string = DarkWhite,
-//    stringActive = LightBlue,
-    stringActive = LightOrange,
+    stringActive = LightBlue,
     sliderBackground = LightGrey,
     sliderThumb = LightBlack,
     text = LightBlack,
     textAlt = DarkWhite,
     textButton = LightBlack,
-//    textButtonTouched = LightBlue,
-    textButtonTouched = LightOrange,
+    textButtonTouched = LightBlue,
     isDark = false
 )
 
@@ -57,8 +57,7 @@ private val LightColorScheme = ViolinEsqueColors(
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
     secondary = PurpleGrey80,
-    tertiary = Pink80
-
+    tertiary = Pink80,
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -66,7 +65,6 @@ private val LightColorScheme = lightColorScheme(
     secondary = PurpleGrey40,
     tertiary = Pink40
 
-    */
 /* Other default colors to override
     background = Color(0xFFFFFBFE),
     surface = Color(0xFFFFFBFE),
@@ -75,7 +73,7 @@ private val LightColorScheme = lightColorScheme(
     onTertiary = Color.White,
     onBackground = Color(0xFF1C1B1F),
     onSurface = Color(0xFF1C1B1F),
-    *//*
+    */
 
 )
 */

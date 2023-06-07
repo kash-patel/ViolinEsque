@@ -1,5 +1,7 @@
 package com.kashithekash.violinesque.utility
 
+import kotlin.math.PI
+
 enum class ViolinString {
     G, D, A, E
 }
@@ -15,3 +17,4 @@ val E_STRING_NOTES: Array<String> =
 
 val handPostionStartIndices: Array<Int> = arrayOf(0, 0, 1, 3, 5, 6, 8, 10, 11, 13, 15, 16, 18, 20, 21)
 //val handPostionStartIndices: Array<Int> = arrayOf(0, 0, 1, 3, 5, 6, 8, 10, 11, 13, 15, 16, 18, 20, 21)
+const val Pi: Float = PI.toFloat()

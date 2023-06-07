@@ -2,8 +2,8 @@ package com.kashithekash.violinesque.utility
 
 class HandPositionManager {
 
-    private var pitchCentre: Float = -22.5f
-    private var totalRange: Float = -45f
+    private var pitchCentre: Float = -Pi / 8
+    private var totalRange: Float = -Pi.toFloat() / 4
     private var normalizedPitch: Float = 0f
     private var normalizedHandPositionRange: Float = 0f
     private var index: Int = 0

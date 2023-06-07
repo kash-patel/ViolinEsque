@@ -2,10 +2,10 @@ package com.kashithekash.violinesque.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DensitySmall
-import androidx.compose.material.icons.filled.EdgesensorHigh
-import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.VerticalSplit
 import androidx.compose.ui.graphics.vector.ImageVector
 
 interface ViolinEsqueDestination {
@@ -18,14 +18,19 @@ object Play : ViolinEsqueDestination {
     override val route = "play"
 }
 
-object LayoutConfig : ViolinEsqueDestination {
+object InterfaceConfig : ViolinEsqueDestination {
     override val icon = Icons.Filled.DensitySmall
-    override val route = "layout_config"
+    override val route = "interface_config"
 }
 
-object TiltSettings : ViolinEsqueDestination {
+object AudioSettings : ViolinEsqueDestination {
     override val icon = Icons.Filled.Tune
-    override val route = "tilt_settings"
+    override val route = "audio_settings"
 }
 
-val violinEsqueScreens = listOf(Play, LayoutConfig, TiltSettings)
+object Calibration : ViolinEsqueDestination {
+    override val icon = Icons.Filled.Settings
+    override val route = "calibration"
+}
+
+val violinEsqueScreens = listOf(Play, InterfaceConfig, AudioSettings, Calibration)

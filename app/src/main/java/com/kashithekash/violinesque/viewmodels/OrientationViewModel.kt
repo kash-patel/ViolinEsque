@@ -8,6 +8,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.kashithekash.violinesque.utility.Config
 import com.kashithekash.violinesque.utility.HandPositionManager
+import com.kashithekash.violinesque.utility.Pi
 import com.kashithekash.violinesque.utility.PrefRepo
 import com.kashithekash.violinesque.utility.RotationReader
 import com.kashithekash.violinesque.utility.SoundManagerStringBased
@@ -40,11 +41,11 @@ class OrientationViewModel(application: Application) : AndroidViewModel(applicat
     private var currentRoll: Float = 0f
     private var currentPitch: Float = 0f
 
-    private var GDRollPoint: Float = -45f
-    private var AERollPoint: Float = 45f
+    private var GDRollPoint: Float = -Pi / 4
+    private var AERollPoint: Float = Pi / 4
 
     private var tiltAwayPitch: Float = 0f
-    private var tiltTowardPitch: Float = -90f
+    private var tiltTowardPitch: Float = -Pi / 4
 
     private lateinit var prefRepo: PrefRepo
 
@@ -58,7 +59,7 @@ class OrientationViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     fun updatePitch (pitch: Float, roll: Float) {
-        currentPitch = if (abs(roll) >= 90) pitch.sign * 180f - pitch else pitch
+        currentPitch = if (abs(roll) >= Pi / 2) pitch.sign * Pi - pitch else pitch
         _currentHandPositionIndexLiveData.value = handPositionManager.calculateCurrentHandPositionIndex(currentPitch)
         if (_currentHandPositionIndexLiveData.value != cachedPositionIndex) {
             cachedPositionIndex = _currentHandPositionIndexLiveData.value!!
@@ -79,6 +80,7 @@ class OrientationViewModel(application: Application) : AndroidViewModel(applicat
         viewModelScope.launch { soundManagerStringBased.manageDString() }
         viewModelScope.launch { soundManagerStringBased.manageAString() }
         viewModelScope.launch { soundManagerStringBased.manageEString() }
+        viewModelScope.launch { soundManagerStringBased.manageTimer() }
     }
 
     fun releaseResources () {
@@ -114,8 +116,8 @@ class OrientationViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     fun resetRollPoints () {
-        AERollPoint = 45f
-        GDRollPoint = -45f
+        AERollPoint = Pi / 4
+        GDRollPoint = -Pi / 4
         Config.setRollCentre((GDRollPoint + AERollPoint) / 2)
         Config.setStringRollRange((AERollPoint - GDRollPoint) / 3)
         prefRepo.setRollCentre(Config.rollCentre)
@@ -140,7 +142,7 @@ class OrientationViewModel(application: Application) : AndroidViewModel(applicat
 
     fun resetTiltLimits () {
         tiltAwayPitch = 0f
-        tiltTowardPitch = -90f
+        tiltTowardPitch = -Pi / 4
         Config.setPitchCentre((tiltAwayPitch + tiltTowardPitch) / 2)
         Config.setTotalPitchRange(tiltTowardPitch - tiltAwayPitch)
         prefRepo.setPitchCentre(Config.pitchCentre)
