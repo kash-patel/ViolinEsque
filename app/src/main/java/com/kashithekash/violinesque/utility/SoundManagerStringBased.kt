@@ -34,6 +34,7 @@ private val DefaultDispatcher: CoroutineDispatcher = Dispatchers.Default
 //private var fadeOutDuration: Int = Config.fadeOutTime
 //private var fadeOutDelay: Int = Config.fadeOutDelay
 
+private const val FadeInDelay: Int = 10
 private var fadeInDuration: Int = 100
 private var blendDuration: Int = 100
 private var fadeOutDuration: Int = 200
@@ -160,7 +161,7 @@ class SoundManagerStringBased (context: Context) {
             }
 
             // Increase active stream volume
-            if (activeStreamID > 0 && activeStreamVolume < 1f - VolumeThreshold) {
+            if (activeStreamID > 0 && activeStreamVolume < 1f - VolumeThreshold && time >= fadeInStartTime + SoundUpdateDelayMs) {
 
                 // Linear fade
 //                activeStreamVolume += if (fadingStreamID > 0)
@@ -183,7 +184,7 @@ class SoundManagerStringBased (context: Context) {
             }
 
             // Decrease fading stream volume
-            if (fadingStreamID > 0 && fadingStreamVolume > 0 + VolumeThreshold && time >= fadeOutStartTime) {
+            if (fadingStreamID > 0 && fadingStreamVolume > VolumeThreshold && time >= fadeOutStartTime) {
 
                 // Linear fade-out
 //                fadingStreamVolume -= if (cachedHighestPressedFinger > -1 || activeStreamID > 0)
