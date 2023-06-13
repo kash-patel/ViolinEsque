@@ -136,10 +136,10 @@ class OrientationViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     fun resetRollPoints () {
-        AERollPoint = Pi / 6
         GDRollPoint = -Pi / 6
+        AERollPoint = Pi / 6
         Config.setRollCentre((GDRollPoint + AERollPoint) / 2)
-        Config.setStringRollRange((AERollPoint - GDRollPoint) / 3)
+        Config.setStringRollRange(abs(AERollPoint - GDRollPoint) / 3)
         prefRepo.setRollCentre(Config.rollCentre)
         prefRepo.setStringRollRange(Config.stringRollRange)
 

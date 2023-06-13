@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,13 +38,14 @@ class ViolinEsqueActivity : ComponentActivity() {
 
     private lateinit var orientationViewModel: OrientationViewModel
     private lateinit var interfaceConfigViewModel: InterfaceConfigViewModel
-    private lateinit var audioSettingsViewModel: AudioSettingsViewModel
     private lateinit var soundManagerStringBased: SoundManagerStringBased
     private lateinit var prefRepo: PrefRepo
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
         prefRepo = PrefRepo(this)
+
+        Log.w("", Config.stringRollRange.toString())
 
         Config.init(
             savedFadeInTime = prefRepo.getFadeInTime(),
@@ -67,15 +69,11 @@ class ViolinEsqueActivity : ComponentActivity() {
             ViewModelProvider(this)[OrientationViewModel(application)::class.java]
         interfaceConfigViewModel =
             ViewModelProvider(this)[InterfaceConfigViewModel(application)::class.java]
-        audioSettingsViewModel =
-            ViewModelProvider(this)[AudioSettingsViewModel(application)::class.java]
 
         orientationViewModel.setSoundManager(soundManagerStringBased)
         orientationViewModel.setPrefRepo(prefRepo)
         interfaceConfigViewModel.setSoundManager(soundManagerStringBased)
         interfaceConfigViewModel.setPrefRepo(prefRepo)
-        audioSettingsViewModel.setSoundManager(soundManagerStringBased)
-        audioSettingsViewModel.setPrefRepo(prefRepo)
 
         orientationViewModel.monitorStrings()
         orientationViewModel.rotationReader.observe(this) {
@@ -83,13 +81,17 @@ class ViolinEsqueActivity : ComponentActivity() {
             orientationViewModel.updatePitch(it[1], it[2])
         }
 
+        Log.w("", Config.stringRollRange.toString())
+
         super.onCreate(savedInstanceState)
         setContent {
-            ViolinEsqueApp(
-                orientationViewModel,
-                interfaceConfigViewModel,
-                audioSettingsViewModel
-            )
+            ViolinEsqueTheme {
+
+                ViolinEsqueApp(
+                    orientationViewModel,
+                    interfaceConfigViewModel,
+                )
+            }
         }
     }
 
@@ -103,39 +105,34 @@ class ViolinEsqueActivity : ComponentActivity() {
 fun ViolinEsqueApp (
     orientationViewModel: OrientationViewModel,
     interfaceConfigViewModel: InterfaceConfigViewModel,
-    audioSettingsViewModel: AudioSettingsViewModel
 ) {
 
     Log.w("ViolinEsqueActivity", "Launched!")
 
-    ViolinEsqueTheme {
+    val navController: NavHostController = rememberNavController()
+    val currentBackStack by navController.currentBackStackEntryAsState()
+    val currentDestination = currentBackStack?.destination
+    val currentScreen = violinEsqueScreens.find { it.route == currentDestination?.route } ?: Play
+    val navBarDestination = violinEsqueScreens.any { it.route == currentDestination?.route }
 
-        val navController: NavHostController = rememberNavController()
-        val currentBackStack by navController.currentBackStackEntryAsState()
-        val currentDestination = currentBackStack?.destination
-        val currentScreen = violinEsqueScreens.find { it.route == currentDestination?.route } ?: Play
-        val navBarDestination = violinEsqueScreens.any { it.route == currentDestination?.route }
+    Surface (color = MaterialTheme.colorScheme.background) {
 
-        Surface (color = ViolinEsqueTheme.colors.background) {
+        Row(Modifier.fillMaxSize()) {
 
-            Row(Modifier.fillMaxSize()) {
+            if (navBarDestination) {
 
-                if (navBarDestination) {
-
-                    NavBar(
-                        allScreens = violinEsqueScreens,
-                        onTabSelect = { screen -> navController.navigateSingleTopTo(screen.route) },
-                        currentScreen = currentScreen
-                    )
-                }
-
-                ViolinEsqueNavHost(
-                    orientationViewModel = orientationViewModel,
-                    interfaceConfigViewModel = interfaceConfigViewModel,
-//                    audioSettingsViewModel = audioSettingsViewModel,
-                    navController = navController
+                NavBar(
+                    allScreens = violinEsqueScreens,
+                    onTabSelect = { screen -> navController.navigateSingleTopTo(screen.route) },
+                    currentScreen = currentScreen
                 )
             }
+
+            ViolinEsqueNavHost(
+                orientationViewModel = orientationViewModel,
+                interfaceConfigViewModel = interfaceConfigViewModel,
+                navController = navController
+            )
         }
     }
 }
@@ -155,7 +152,6 @@ fun ViolinEsqueNavHost(
 
         composable(route = Play.route) {
             PlayScreen(
-                invertPitchLiveData = orientationViewModel.invertPitchLiveData,
                 currentStringLiveData = orientationViewModel.currentStringLiveData,
                 handPositionsMutableList = interfaceConfigViewModel.handPositionsMutableList,
                 currentHandPositionIndexLiveData = orientationViewModel.currentHandPositionIndexLiveData,

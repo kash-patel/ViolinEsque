@@ -81,7 +81,7 @@ fun InterfaceConfigScreen (
         ) {
             Text(
                 "Available Hand Positions",
-                color = ViolinEsqueTheme.colors.text
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
 
@@ -158,7 +158,7 @@ fun HandPositionCard(
         modifier = modifier
             .fillMaxWidth()
             .wrapContentHeight()
-            .background(color = ViolinEsqueTheme.colors.buttonTouched, shape = RoundedCornerShape(10.dp))
+            .background(color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(10.dp))
             .padding(horizontal = 5.dp)
             .padding(vertical = 10.dp),
         horizontalArrangement = if (showDeleteButton) Arrangement.SpaceBetween else Arrangement.Center
@@ -176,7 +176,7 @@ fun HandPositionCard(
                 Icon(
                     imageVector = Icons.Outlined.Delete,
                     contentDescription = "Remove hand position ${index + 1}.",
-                    tint = Color.Red.copy(red = 0.5f)
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -201,12 +201,11 @@ fun AddHandPositionCard(
             Icon(
                 imageVector = Icons.Outlined.AddCircle,
                 contentDescription = "Add hand position to ${index}.",
-                tint = ViolinEsqueTheme.colors.text
+                tint = MaterialTheme.colorScheme.onSurface
             )
         }
     }
 }
 
-private val SettingRowHeight: Dp = 80.dp
 private const val LowestPosition: Int = 1
 private const val HighestPosition: Int = 15

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,14 +27,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.kashithekash.violinesque.ui.components.PositionIndicatorRail
+import com.kashithekash.violinesque.ui.components.StringsContainer
 import com.kashithekash.violinesque.ui.theme.ViolinEsqueTheme
 import com.kashithekash.violinesque.utility.A_STRING_NOTES
 import com.kashithekash.violinesque.utility.D_STRING_NOTES
@@ -44,7 +48,6 @@ import com.kashithekash.violinesque.utility.handPostionStartIndices
 
 @Composable
 fun PlayScreen (
-    invertPitchLiveData: MutableLiveData<Boolean>,
     currentStringLiveData: LiveData<ViolinString>,
     currentHandPositionIndexLiveData: LiveData<Int>,
     expandButtonsLiveData: LiveData<Boolean>,
@@ -136,7 +139,7 @@ fun OpenStringButton(
 
     Box(modifier = modifier
         .fillMaxSize()
-        .background(color = if (isTouched) ViolinEsqueTheme.colors.fingerBoardTouched else ViolinEsqueTheme.colors.fingerBoard)
+        .background(color = if (isTouched) MaterialTheme.colorScheme.surface else Color.Transparent)
         .pointerInput(Unit) {
             forEachGesture {
                 awaitPointerEventScope {
@@ -160,41 +163,8 @@ fun OpenStringButton(
     ) {
         Text(
             text = handPositionsListMutable[currentHandPositionIndex].toString(),
-            color = if (isTouched) ViolinEsqueTheme.colors.textButtonTouched else ViolinEsqueTheme.colors.textButton,
+            color = if (isTouched) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
             modifier = modifier.align(Alignment.Center)
-        )
-    }
-}
-
-@Composable
-fun StringsContainer (currentStringLiveData: LiveData<ViolinString>, modifier: Modifier) {
-
-    val currentString : ViolinString by currentStringLiveData.observeAsState(ViolinString.A)
-
-    Row (
-        modifier = modifier
-            .fillMaxSize()
-    ) {
-        VString(isHighlighted = currentString == ViolinString.G, width = 5.dp, modifier = modifier)
-        VString(isHighlighted = currentString == ViolinString.D, width = 4.dp, modifier = modifier)
-        VString(isHighlighted = currentString == ViolinString.A, width = 3.dp, modifier = modifier)
-        VString(isHighlighted = currentString == ViolinString.E, width = 2.dp, modifier = modifier)
-    }
-}
-
-@Composable
-fun RowScope.VString (isHighlighted: Boolean, width: Dp, modifier: Modifier) {
-
-    Box (
-        modifier
-            .fillMaxSize()
-            .weight(1f)
-    ) {
-        Box(modifier = modifier
-            .align(Alignment.Center)
-            .width(width)
-            .fillMaxHeight()
-            .background(color = if (isHighlighted) ViolinEsqueTheme.colors.stringActive else ViolinEsqueTheme.colors.string)
         )
     }
 }
@@ -272,14 +242,13 @@ fun ColumnScope.FingerPositionButton (
         )
         .fillMaxWidth()
         .height(regularButtonHeight)
-        .background(color = if (isTouched) ViolinEsqueTheme.colors.buttonTouched else ViolinEsqueTheme.colors.button)
+        .background(color = if (isTouched) MaterialTheme.colorScheme.surface else Color.Transparent)
         .pointerInput(Unit) {
 
             forEachGesture {
 
                 awaitPointerEventScope {
 
-                    currentHandPosition
                     awaitFirstDown()
                     isTouched = true
                     onButtonTouch(fingerPosition)
@@ -306,13 +275,13 @@ fun ColumnScope.FingerPositionButton (
 
         Text(
             text = noteString,
-            color = if (isTouched) ViolinEsqueTheme.colors.textButtonTouched
+            color = if (isTouched) MaterialTheme.colorScheme.primary
             else if (fingerPosition == 1
                     || fingerPosition == 3
                     || fingerPosition == 6
                     || fingerPosition == 8
-                ) ViolinEsqueTheme.colors.textAlt
-            else ViolinEsqueTheme.colors.textButton,
+                ) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+            else MaterialTheme.colorScheme.onSurface,
             modifier = Modifier
                 .align(Alignment.CenterStart)
                 .padding(start = 15.dp)

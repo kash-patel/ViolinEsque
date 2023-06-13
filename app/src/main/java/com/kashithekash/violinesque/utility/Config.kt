@@ -6,13 +6,13 @@ object Config {
         private set
     var blendTime: Int = 100
         private set
-    var fadeOutTime: Int = 100
+    var fadeOutTime: Int = 200
         private set
     var fadeOutDelay: Int = 100
         private set
     var rollCentre: Float = 0f
         private set
-    var stringRollRange: Float = Pi / 3
+    var stringRollRange: Float = Pi / 9
         private set
     var pitchCentre: Float = -Pi / 8
         private set

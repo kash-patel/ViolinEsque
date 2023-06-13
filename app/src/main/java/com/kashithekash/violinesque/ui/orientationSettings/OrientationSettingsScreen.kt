@@ -1,5 +1,6 @@
 package com.kashithekash.violinesque.ui.orientationSettings
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,11 +15,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.TripOrigin
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -30,9 +34,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.kashithekash.violinesque.ui.components.HorizontalLine
 import com.kashithekash.violinesque.ui.components.PositionIndicatorRail
+import com.kashithekash.violinesque.ui.components.StringsContainer
 import com.kashithekash.violinesque.ui.components.VerticalLine
-import com.kashithekash.violinesque.ui.play.StringsContainer
-import com.kashithekash.violinesque.ui.theme.ViolinEsqueTheme
 import com.kashithekash.violinesque.utility.ViolinString
 
 @Composable
@@ -80,18 +83,7 @@ fun OrientationSettingsScreen (
                     Text(
                         text = "Here you can set how far clockwise or counterclockwise you want to roll your device to reach the G or E string, and how far up or down you want to pitch your device to reach the lowest or highest hand position.",
                         modifier = modifier.fillMaxWidth(),
-                        color = ViolinEsqueTheme.colors.text
-                    )
-                }
-
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = modifier.padding(vertical = 5.dp)
-                ) {
-                    Text(
-                        text = "Live indicators are shown so you can see how your settings change your experience in real time.",
-                        modifier = modifier.fillMaxWidth(),
-                        color = ViolinEsqueTheme.colors.text
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
@@ -99,113 +91,122 @@ fun OrientationSettingsScreen (
 
                 StringsContainer(
                     currentStringLiveData = currentStringLiveData,
-                    modifier = modifier.height(50.dp)
+                    modifier = modifier.height(30.dp)
                 )
 
-                HorizontalLine(modifier = modifier)
+                Spacer(modifier = modifier.height(10.dp))
 
-                Column(
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                Column (
                     modifier = modifier
-                        .height(80.dp)
+                        .padding(10.dp)
+                        .background(color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(10.dp))
+                        .wrapContentHeight()
                         .fillMaxWidth()
-                        .clickable { setHighestPositionPitch() },
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.TripOrigin,
-                        contentDescription = "Set tilt away limit",
-                        tint = ViolinEsqueTheme.colors.stringActive,
-                        modifier = modifier.scale(0.5f)
-                    )
-                    Icon(
-                        imageVector = Icons.Filled.MoreVert,
-                        contentDescription = "Set tilt away limit",
-                        tint = ViolinEsqueTheme.colors.stringActive
-                    )
-                }
-
-                HorizontalLine(modifier = modifier)
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = modifier
-                        .fillMaxWidth()
-                        .height(100.dp)
                 ) {
 
-                    Box(contentAlignment = Alignment.Center, modifier = modifier
-                        .fillMaxHeight()
-                        .weight(1f)
-                        .clickable { setGDRollPoint() }
-                    ) {
-
-                        Box(
-                            modifier = modifier
-                                .height(80.dp)
-                                .width(5.dp)
-                                .background(color = ViolinEsqueTheme.colors.stringActive)
-                        )
-                    }
-
-                    VerticalLine(modifier = modifier)
-
-                    Box(
-                        contentAlignment = Alignment.Center,
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .clickable {
-                                resetRollPoints()
-                                resetPitchLimits()
-                            }
+                            .height(80.dp)
+                            .fillMaxWidth()
+                            .clickable { setHighestPositionPitch() },
                     ) {
-                        Text(
-                            text = "RESET",
-                            modifier = modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center,
-                            color = ViolinEsqueTheme.colors.text
+                        Icon(
+                            imageVector = Icons.Filled.TripOrigin,
+                            contentDescription = "Set tilt away limit",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = modifier.scale(0.5f)
+                        )
+                        Icon(
+                            imageVector = Icons.Filled.MoreVert,
+                            contentDescription = "Set tilt away limit",
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
 
-                    VerticalLine(modifier = modifier)
+                    HorizontalLine(modifier = modifier)
 
-                    Box(contentAlignment = Alignment.Center, modifier = modifier
-                        .fillMaxHeight()
-                        .weight(1f)
-                        .clickable { setAERollPoint() }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = modifier
+                            .fillMaxWidth()
+                            .height(80.dp)
                     ) {
+
+                        Box(contentAlignment = Alignment.Center, modifier = modifier
+                            .fillMaxHeight()
+                            .weight(1f)
+                            .clickable { setGDRollPoint() }
+                        ) {
+
+                            Box(
+                                modifier = modifier
+                                    .height(40.dp)
+                                    .width(5.dp)
+                                    .background(color = MaterialTheme.colorScheme.primary)
+                            )
+                        }
+
+                        VerticalLine(modifier = modifier)
 
                         Box(
+                            contentAlignment = Alignment.Center,
                             modifier = modifier
-                                .height(80.dp)
-                                .width(2.dp)
-                                .background(color = ViolinEsqueTheme.colors.stringActive)
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .clickable {
+                                    resetRollPoints()
+                                    resetPitchLimits()
+                                }
+                        ) {
+                            Text(
+                                text = "RESET",
+                                modifier = modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        VerticalLine(modifier = modifier)
+
+                        Box(contentAlignment = Alignment.Center, modifier = modifier
+                            .fillMaxHeight()
+                            .weight(1f)
+                            .clickable { setAERollPoint() }
+                        ) {
+
+                            Box(
+                                modifier = modifier
+                                    .height(40.dp)
+                                    .width(2.dp)
+                                    .background(color = MaterialTheme.colorScheme.primary)
+                            )
+                        }
+                    }
+
+                    HorizontalLine(modifier = modifier)
+
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = modifier
+                            .height(80.dp)
+                            .fillMaxWidth()
+                            .clickable { setLowestPositionPitch() },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.MoreVert,
+                            contentDescription = "Set tilt toward limit",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Icon(
+                            imageVector = Icons.Filled.TripOrigin,
+                            contentDescription = "Set tilt toward limit",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = modifier.scale(0.5f)
                         )
                     }
-                }
-
-                HorizontalLine(modifier = modifier)
-
-                Column(
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = modifier
-                        .height(80.dp)
-                        .fillMaxWidth()
-                        .clickable { setLowestPositionPitch() },
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.MoreVert,
-                        contentDescription = "Set tilt toward limit",
-                        tint = ViolinEsqueTheme.colors.stringActive
-                    )
-                    Icon(
-                        imageVector = Icons.Filled.TripOrigin,
-                        contentDescription = "Set tilt toward limit",
-                        tint = ViolinEsqueTheme.colors.stringActive,
-                        modifier = modifier.scale(0.5f)
-                    )
                 }
             }
         }

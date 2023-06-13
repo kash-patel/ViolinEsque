@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -37,8 +38,8 @@ fun NumberPickerHorizontal(
                 enabled = value > range.first(),
                 onClick = { onValueChange(value - step) },
                 colors = IconButtonDefaults.iconButtonColors(
-                    disabledContentColor = ViolinEsqueTheme.colors.textAlt,
-                    contentColor = ViolinEsqueTheme.colors.text
+                    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                    contentColor = MaterialTheme.colorScheme.onSurface
                 )
             ) {
                 Icon(
@@ -49,15 +50,15 @@ fun NumberPickerHorizontal(
 
             Text(
                 text = value.toString(),
-                color = ViolinEsqueTheme.colors.text
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             IconButton(
                 enabled = value < range.last(),
                 onClick = { onValueChange(value + step) },
                 colors = IconButtonDefaults.iconButtonColors(
-                    disabledContentColor = ViolinEsqueTheme.colors.textAlt,
-                    contentColor = ViolinEsqueTheme.colors.text
+                    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                    contentColor = MaterialTheme.colorScheme.onSurface
                 )
             ) {
                 Icon(
@@ -89,8 +90,8 @@ fun NumberPickerVertical(
                     onValueChange(value + step)
                 },
                 colors = IconButtonDefaults.iconButtonColors(
-                    disabledContentColor = ViolinEsqueTheme.colors.textAlt,
-                    contentColor = ViolinEsqueTheme.colors.text
+                    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                    contentColor = MaterialTheme.colorScheme.onSurface
                 )
             ) {
                 Icon(
@@ -101,7 +102,7 @@ fun NumberPickerVertical(
 
             Text(
                 text = value.toString(),
-                color = ViolinEsqueTheme.colors.text
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             IconButton(
@@ -110,8 +111,8 @@ fun NumberPickerVertical(
                     onValueChange(value - step)
                 },
                 colors = IconButtonDefaults.iconButtonColors(
-                    disabledContentColor = ViolinEsqueTheme.colors.textAlt,
-                    contentColor = ViolinEsqueTheme.colors.text
+                    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                    contentColor = MaterialTheme.colorScheme.onSurface
                 )
             ) {
                 Icon(

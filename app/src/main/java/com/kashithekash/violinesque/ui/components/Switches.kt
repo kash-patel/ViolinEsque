@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -16,6 +17,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LiveData
 import com.kashithekash.violinesque.ui.theme.ViolinEsqueTheme
@@ -45,7 +47,7 @@ fun SettingsRowSwitch(
         ) {
             Text(
                 text = text,
-                color = ViolinEsqueTheme.colors.text
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
 
@@ -58,12 +60,12 @@ fun SettingsRowSwitch(
                 checked = state!!,
                 onCheckedChange = { onCheckedChange(!state!!) },
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = ViolinEsqueTheme.colors.textButtonTouched,
-                    checkedTrackColor = ViolinEsqueTheme.colors.background,
-                    checkedBorderColor = ViolinEsqueTheme.colors.textButtonTouched,
-                    uncheckedThumbColor = ViolinEsqueTheme.colors.textAlt,
-                    uncheckedTrackColor = ViolinEsqueTheme.colors.background,
-                    uncheckedBorderColor = ViolinEsqueTheme.colors.textAlt
+                    checkedThumbColor = MaterialTheme.colorScheme.primary,
+                    checkedTrackColor = Color.Transparent,
+                    checkedBorderColor = MaterialTheme.colorScheme.primary,
+                    uncheckedThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                    uncheckedTrackColor = Color.Transparent,
+                    uncheckedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                 ),
                 modifier = modifier.scale(0.8f).wrapContentHeight(),
             )

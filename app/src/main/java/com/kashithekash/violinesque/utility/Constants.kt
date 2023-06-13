@@ -16,5 +16,4 @@ val E_STRING_NOTES: Array<String> =
     arrayOf("E 5", "F 5", "F# 5", "G 5", "G# 5", "A 5", "A# 5", "B 5", "C 6", "C# 6", "D 6", "D# 6", "E 6", "F 6", "F# 6", "G 6", "G# 6", "A 6", "A# 6", "B 6", "C 7", "C# 7", "D 7", "D# 7", "E 7", "F 7", "F# 7", "G 7", "G# 7", "A 7")
 
 val handPostionStartIndices: Array<Int> = arrayOf(0, 0, 1, 3, 5, 6, 8, 10, 11, 13, 15, 16, 18, 20, 21, 23)
-//val handPostionStartIndices: Array<Int> = arrayOf(0, 0, 1, 3, 5, 6, 8, 10, 11, 13, 15, 16, 18, 20, 21, 23)
 const val Pi: Float = PI.toFloat()

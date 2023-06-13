@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.RotateLeft
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -37,7 +38,7 @@ fun SettingsRowButton(
         ) {
             Text(
                 text = text,
-                color = ViolinEsqueTheme.colors.text
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
 
@@ -47,7 +48,7 @@ fun SettingsRowButton(
             Icon(
                 imageVector = icon,
                 contentDescription = text,
-                tint = ViolinEsqueTheme.colors.text
+                tint = MaterialTheme.colorScheme.onSurface
             )
         }
     }

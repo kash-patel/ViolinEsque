@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.RadioButtonChecked
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.TripOrigin
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -69,7 +70,7 @@ private fun PositionIndicatorDot(
         Icon(
             imageVector = Icons.Filled.TripOrigin,
             contentDescription = "Current position is or is not $index",
-            tint = if (index == currentHandPositionIndex) ViolinEsqueTheme.colors.textButtonTouched else ViolinEsqueTheme.colors.textAlt,
+            tint = if (index == currentHandPositionIndex) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
             modifier = modifier.fillMaxWidth()
         )
     }

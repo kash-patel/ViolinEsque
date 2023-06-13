@@ -16,6 +16,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -74,7 +75,7 @@ fun NavBarTab(
         )
     }
     val tabTintColor by animateColorAsState(
-        targetValue = if (isSelected) ViolinEsqueTheme.colors.textButtonTouched else ViolinEsqueTheme.colors.textAlt,
+        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
         animationSpec = animSpec
     )
     

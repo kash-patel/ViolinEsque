@@ -7,7 +7,7 @@ import com.google.gson.Gson
 class PrefRepo (context: Context) {
 
     private val sharedPrefs: SharedPreferences =
-        context.getSharedPreferences("com.kashithekash.violinesque.prefs", Context.MODE_PRIVATE)
+        context.getSharedPreferences("com.kashithekash.violinesque.sharedprefs", Context.MODE_PRIVATE)
 
     private val editor = sharedPrefs.edit()
 
@@ -83,11 +83,11 @@ class PrefRepo (context: Context) {
     }
 
     fun getBlendTime () : Int {
-        return sharedPrefs.getInt("Blend_time", 100)
+        return sharedPrefs.getInt("blend_time", 100)
     }
 
     fun getFadeOutTime () : Int {
-        return sharedPrefs.getInt("fade_out_time", 100)
+        return sharedPrefs.getInt("fade_out_time", 200)
     }
 
     fun getFadeOutDelay () : Int {
@@ -99,7 +99,7 @@ class PrefRepo (context: Context) {
     }
 
     fun getStringRollRange () : Float {
-        return sharedPrefs.getFloat("string_roll_range", -Pi / 3)
+        return sharedPrefs.getFloat("string_roll_range", Pi / 9)
     }
 
     fun getPitchCentre () : Float {

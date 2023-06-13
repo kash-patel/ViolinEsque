@@ -6,6 +6,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,50 +18,55 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.LiveData
 import com.kashithekash.violinesque.ui.theme.ViolinEsqueTheme
+import com.kashithekash.violinesque.utility.ViolinString
 
 @Composable
-fun ConfigSideBar (modifier: Modifier) {
+fun StringsContainer (currentStringLiveData: LiveData<ViolinString>, modifier: Modifier) {
 
-    Column (
+    val currentString : ViolinString by currentStringLiveData.observeAsState(ViolinString.A)
+
+    Row (
         modifier = modifier
-            .width(50.dp)
+            .fillMaxSize()
     ) {
-        Spacer(modifier = modifier.weight(1f))
-        BackButton(modifier = modifier)
-        Spacer(modifier = modifier.height(30.dp))
+        VString(isHighlighted = currentString == ViolinString.G, width = 5.dp, modifier = modifier)
+        VString(isHighlighted = currentString == ViolinString.D, width = 4.dp, modifier = modifier)
+        VString(isHighlighted = currentString == ViolinString.A, width = 3.dp, modifier = modifier)
+        VString(isHighlighted = currentString == ViolinString.E, width = 2.dp, modifier = modifier)
     }
 }
 
 @Composable
-fun BackButton (modifier: Modifier) {
-
-    val context : Context = LocalContext.current
+fun RowScope.VString (isHighlighted: Boolean, width: Dp, modifier: Modifier) {
 
     Box (
-        contentAlignment = Alignment.Center,
-        modifier = modifier
+        modifier
             .fillMaxSize()
-            .clickable { (context as Activity).finish() }
+            .weight(1f)
     ) {
-        Icon(
-            imageVector = Icons.Default.ArrowBack,
-            contentDescription = "Back",
-            tint = ViolinEsqueTheme.colors.textButton,
-            modifier = modifier.size(30.dp)
+        Box(modifier = modifier
+            .align(Alignment.Center)
+            .width(width)
+            .fillMaxHeight()
+            .background(color = if (isHighlighted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
         )
     }
 }
 
 @Composable
-fun HorizontalLine (lineWidth: Dp = 2.dp, lineColor: Color = ViolinEsqueTheme.colors.buttonTouched, modifier: Modifier) {
+fun HorizontalLine (lineWidth: Dp = 1.dp, lineColor: Color = MaterialTheme.colorScheme.outlineVariant, modifier: Modifier) {
     Box (
         modifier = modifier
             .fillMaxWidth()
@@ -69,7 +76,7 @@ fun HorizontalLine (lineWidth: Dp = 2.dp, lineColor: Color = ViolinEsqueTheme.co
 }
 
 @Composable
-fun VerticalLine (lineWidth: Dp = 2.dp, lineColor: Color = ViolinEsqueTheme.colors.buttonTouched, modifier: Modifier) {
+fun VerticalLine (lineWidth: Dp = 1.dp, lineColor: Color = MaterialTheme.colorScheme.outlineVariant, modifier: Modifier) {
     Box (
         modifier = modifier
             .fillMaxHeight()
