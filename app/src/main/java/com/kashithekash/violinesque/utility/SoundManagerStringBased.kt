@@ -29,16 +29,20 @@ private const val VolumeThreshold: Float = 0.01f
 private val LnVolumeThreshold: Float = ln(VolumeThreshold)
 private val DefaultDispatcher: CoroutineDispatcher = Dispatchers.Default
 
-private var fadeInDuration: Int = Config.fadeInTime
-private var blendDuration: Int = Config.blendTime
-private var fadeOutDuration: Int = Config.fadeOutTime
-private var fadeOutDelay: Int = Config.fadeOutDelay
+//private var fadeInDuration: Int = Config.fadeInTime
+//private var blendDuration: Int = Config.blendTime
+//private var fadeOutDuration: Int = Config.fadeOutTime
+//private var fadeOutDelay: Int = Config.fadeOutDelay
+
+private var fadeInDuration: Int = 100
+private var blendDuration: Int = 100
+private var fadeOutDuration: Int = 200
+private var fadeOutDelay: Int = 100
 
 private val isFingerPressed: BooleanArray = booleanArrayOf(false, false, false, false, false, false, false, false, false)
 private var currentHandPosition: Int = 1
 private var activeString: ViolinString? = null
 private var highestPressedFinger: Int = -1
-private var highestActivePosition: Int = -1
 private var activeStreamRate: Float = 1f
 private var silenceStreamID: Int = 0
 
