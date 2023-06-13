@@ -17,17 +17,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-//import com.kashithekash.violinesque.navigation.AudioSettings
 import com.kashithekash.violinesque.navigation.InterfaceConfig
 import com.kashithekash.violinesque.navigation.Play
 import com.kashithekash.violinesque.navigation.OrientationSettings
-import com.kashithekash.violinesque.navigation.PitchCalibration
-import com.kashithekash.violinesque.navigation.RollCalibration
-import com.kashithekash.violinesque.navigation.YawCalibration
 import com.kashithekash.violinesque.navigation.violinEsqueScreens
-import com.kashithekash.violinesque.ui.calibration.PitchCalibrationScreen
-import com.kashithekash.violinesque.ui.calibration.RollCalibrationScreen
-//import com.kashithekash.violinesque.ui.audioSettings.AudioSettingsScreen
 import com.kashithekash.violinesque.ui.components.NavBar
 import com.kashithekash.violinesque.ui.interfaceConfig.InterfaceConfigScreen
 import com.kashithekash.violinesque.ui.play.PlayScreen
@@ -151,7 +144,6 @@ fun ViolinEsqueApp (
 fun ViolinEsqueNavHost(
     orientationViewModel: OrientationViewModel,
     interfaceConfigViewModel: InterfaceConfigViewModel,
-//    audioSettingsViewModel: AudioSettingsViewModel,
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
@@ -187,71 +179,17 @@ fun ViolinEsqueNavHost(
             )
         }
 
-        /*
-        composable(route = AudioSettings.route) {
-            AudioSettingsScreen(
-                getFadeInTime = { audioSettingsViewModel.getFadeInTime() },
-                onFadeInTimeChange = { newFadeInTime -> audioSettingsViewModel.setFadeInTime(newFadeInTime) },
-                getBlendTime = { audioSettingsViewModel.getBlendTime() },
-                onBlendTimeChange = { newBlendTime -> audioSettingsViewModel.setBlendTime(newBlendTime) },
-                getFadeOutTime = { audioSettingsViewModel.getFadeOutTime() },
-                onFadeOutTimeChange = { newFadeOutTime -> audioSettingsViewModel.setFadeOutTime(newFadeOutTime) },
-                getFadeOutDelay = { audioSettingsViewModel.getFadeOutDelay() },
-                onFadeOutDelayChange = { newFadeOutDelay -> audioSettingsViewModel.setFadeOutDelay(newFadeOutDelay) },
-            )
-        }
-        */
-
-        /*
-        composable(route = OrientationSettingsGraph.route) {
-            OrientationSettingsNavGraph(
+        composable(route = OrientationSettings.route) {
+            OrientationSettingsScreen(
                 currentStringLiveData = orientationViewModel.currentStringLiveData,
-                invertRollLiveData = orientationViewModel.invertRollLiveData,
-                toggleInvertRoll = { orientationViewModel.toggleInvertRoll() },
-                invertPitchLiveData = orientationViewModel.invertPitchLiveData,
-                toggleInvertPitch = { orientationViewModel.toggleInvertPitch() },
-                handPositionsMutableList = interfaceConfigViewModel.handPositionsMutableList,
-                currentHandPositionIndexLiveData = orientationViewModel.currentHandPositionIndexLiveData,
                 setGDRollPoint = { orientationViewModel.setGDRollPoint() },
                 setAERollPoint = { orientationViewModel.setAERollPoint() },
                 resetRollPoints = { orientationViewModel.resetRollPoints() },
-                setTiltAwayLimit = { orientationViewModel.setTiltAwayLimit() },
-                setTiltTowardLimit = { orientationViewModel.setTiltTowardLimit() },
-                resetTiltLimits = { orientationViewModel.resetTiltLimits() },
-                navController = rememberNavController()
-            )
-        }
-        */
-
-        composable(route = OrientationSettings.route) {
-            OrientationSettingsScreen(
-                invertRollLiveData = orientationViewModel.invertRollLiveData,
-                toggleInvertRoll = { orientationViewModel.toggleInvertRoll() },
-                invertPitchLiveData = orientationViewModel.invertPitchLiveData,
-                toggleInvertPitch = { orientationViewModel.toggleInvertPitch() },
-                goToRollCalibrationScreen = { navController.navigate(RollCalibration.route) },
-                goToPitchCalibrationScreen = { navController.navigate(PitchCalibration.route) },
-                goToYawCalibrationScreen = { }
-            )
-        }
-
-        composable(route = RollCalibration.route) {
-            RollCalibrationScreen(
-                currentStringLiveData = orientationViewModel.currentStringLiveData,
-                setGDRollPoint = { orientationViewModel.setGDRollPoint() },
-                setAERollPoint = { orientationViewModel.setAERollPoint() },
-                resetRollPoints = { orientationViewModel.resetRollPoints() }
-            )
-        }
-
-        composable(route = PitchCalibration.route) {
-            PitchCalibrationScreen(
                 handPositionsMutableList = interfaceConfigViewModel.handPositionsMutableList,
                 currentHandPositionIndexLiveData = orientationViewModel.currentHandPositionIndexLiveData,
-                invertPitchLiveData = orientationViewModel.invertPitchLiveData,
-                setTiltAwayLimit = { orientationViewModel.setTiltAwayLimit() },
-                setTiltTowardLimit = { orientationViewModel.setTiltTowardLimit() },
-                resetTiltLimits = { orientationViewModel.resetTiltLimits() }
+                setLowestPositionPitch = { orientationViewModel.setLowestPositionPitch() },
+                setHighestPositionPitch = { orientationViewModel.setHighestPositionPitch() },
+                resetPitchLimits = { orientationViewModel.resetHandPositionPitchLimits() }
             )
         }
     }

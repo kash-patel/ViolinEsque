@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LiveData
@@ -80,8 +81,7 @@ fun InterfaceConfigScreen (
         ) {
             Text(
                 "Available Hand Positions",
-                color = ViolinEsqueTheme.colors.text,
-                style = MaterialTheme.typography.headlineSmall
+                color = ViolinEsqueTheme.colors.text
             )
         }
 

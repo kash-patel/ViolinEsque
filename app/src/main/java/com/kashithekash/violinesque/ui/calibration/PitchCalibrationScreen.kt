@@ -32,7 +32,7 @@ fun PitchCalibrationScreen(
         PositionIndicatorRail(
             handPositionsMutableList = handPositionsMutableList,
             currentHandPositionIndexLiveData = currentHandPositionIndexLiveData,
-            invertPitchLiveData = invertPitchLiveData
+//            invertPitchLiveData = invertPitchLiveData
         )
 
         Column (

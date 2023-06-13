@@ -1,55 +1,51 @@
 package com.kashithekash.violinesque.ui.orientationSettings
 
-import androidx.compose.foundation.border
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.TripOrigin
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import com.kashithekash.violinesque.navigateSingleTopTo
-import com.kashithekash.violinesque.navigation.OrientationSettings
-import com.kashithekash.violinesque.navigation.PitchCalibration
-import com.kashithekash.violinesque.navigation.RollCalibration
-import com.kashithekash.violinesque.ui.calibration.PitchCalibrationScreen
-import com.kashithekash.violinesque.ui.calibration.RollCalibrationScreen
 import com.kashithekash.violinesque.ui.components.HorizontalLine
-import com.kashithekash.violinesque.ui.components.SettingsRowButton
-import com.kashithekash.violinesque.ui.components.SettingsRowSwitch
+import com.kashithekash.violinesque.ui.components.PositionIndicatorRail
+import com.kashithekash.violinesque.ui.components.VerticalLine
+import com.kashithekash.violinesque.ui.play.StringsContainer
 import com.kashithekash.violinesque.ui.theme.ViolinEsqueTheme
 import com.kashithekash.violinesque.utility.ViolinString
 
 @Composable
 fun OrientationSettingsScreen (
-    invertRollLiveData: MutableLiveData<Boolean>,
-    toggleInvertRoll: () -> Unit,
-    invertPitchLiveData: MutableLiveData<Boolean>,
-    toggleInvertPitch: () -> Unit,
-    goToRollCalibrationScreen: () -> Unit,
-    goToPitchCalibrationScreen: () -> Unit,
-    goToYawCalibrationScreen: () -> Unit,
+    currentStringLiveData: LiveData<ViolinString>,
+    handPositionsMutableList: MutableList<Int>,
+    currentHandPositionIndexLiveData: LiveData<Int>,
+    setGDRollPoint: () -> Unit,
+    setAERollPoint: () -> Unit,
+    resetRollPoints: () -> Unit,
+    setLowestPositionPitch: () -> Unit,
+    setHighestPositionPitch: () -> Unit,
+    resetPitchLimits: () -> Unit,
     modifier: Modifier = Modifier
 ) {
 
@@ -57,216 +53,160 @@ fun OrientationSettingsScreen (
         .fillMaxSize()
     ) {
 
-        Column (
-            horizontalAlignment = Alignment.CenterHorizontally,
+        Row (
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
             modifier = modifier
                 .fillMaxSize()
                 .padding(vertical = 30.dp)
-                .padding(end = 30.dp)
+                .padding(end = 50.dp)
         ) {
 
-            // invert Roll
-            SettingsRowSwitch(
-                text = "Invert string change direction",
-                booleanStateLiveData = invertRollLiveData,
-                onCheckedChange = { toggleInvertRoll() },
-                modifier = modifier
+            PositionIndicatorRail(
+                handPositionsMutableList = handPositionsMutableList,
+                currentHandPositionIndexLiveData = currentHandPositionIndexLiveData,
             )
 
-            HorizontalLine(modifier = modifier)
-
-            // Invert Pitch
-            SettingsRowSwitch(
-                text = "Invert hand position change direction",
-                booleanStateLiveData = invertPitchLiveData,
-                onCheckedChange = { toggleInvertPitch() },
-                modifier = modifier
-            )
-
-            HorizontalLine(modifier = modifier)
-
-            /*
-            Box (modifier = modifier
-                .fillMaxWidth()
-                .height(SettingRowHeight)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top,
+                modifier = modifier.fillMaxSize()
             ) {
+
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = modifier.padding(vertical = 5.dp)
+                ) {
+                    Text(
+                        text = "Here you can set how far clockwise or counterclockwise you want to roll your device to reach the G or E string, and how far up or down you want to pitch your device to reach the lowest or highest hand position.",
+                        modifier = modifier.fillMaxWidth(),
+                        color = ViolinEsqueTheme.colors.text
+                    )
+                }
+
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = modifier.padding(vertical = 5.dp)
+                ) {
+                    Text(
+                        text = "Live indicators are shown so you can see how your settings change your experience in real time.",
+                        modifier = modifier.fillMaxWidth(),
+                        color = ViolinEsqueTheme.colors.text
+                    )
+                }
+
+                Spacer(modifier = modifier.height(30.dp))
 
                 StringsContainer(
                     currentStringLiveData = currentStringLiveData,
-                    modifier = modifier
+                    modifier = modifier.height(50.dp)
                 )
-            }
 
-            HorizontalLine(modifier = modifier)
-            */
+                HorizontalLine(modifier = modifier)
 
-            /*
-            // Reset roll limits
-            SettingsRowButton(
-                text = "Reset roll range",
-                onClick = { resetRollPoints() },
-                icon = Icons.Filled.Refresh,
-                modifier = modifier
-            )
-
-            HorizontalLine(modifier = modifier)
-
-            // Reset pitch limits
-            SettingsRowButton(
-                text = "Reset pitch range",
-                onClick = { resetTiltLimits() },
-                icon = Icons.Filled.Refresh,
-                modifier = modifier
-            )
-
-            HorizontalLine(modifier = modifier)
-
-            Box (
-                contentAlignment = Alignment.CenterStart,
-                modifier = modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .padding(vertical = 5.dp)
-            ) {
-                Text(
-                    text = "Use the buttons below to set the roll limits (left and right buttons) and tilt limits (upper and lower buttons).",
-                    color = ViolinEsqueTheme.colors.text
-                )
-            }
-
-            OrientationLimitButtons(
-                setAERollPoint = { setAERollPoint() },
-                setGDRollPoint = { setGDRollPoint() },
-                setTiltAwayLimit = { setTiltAwayLimit() },
-                setTiltTowardLimit = { setTiltTowardLimit() },
-                modifier = modifier
-            )
-            // Set toward and away pitch limits
-            // Set CCW and CW roll limits
-            */
-
-            SettingsRowButton(
-                text = "Set roll limits",
-                onClick = { goToRollCalibrationScreen() },
-                icon = RollCalibration.icon,
-                modifier = modifier
-            )
-
-            HorizontalLine(modifier = modifier)
-
-            SettingsRowButton(
-                text = "Set pitch limits",
-                onClick = { goToPitchCalibrationScreen() },
-                icon = PitchCalibration.icon,
-                modifier = modifier
-            )
-        }
-    }
-}
-
-@Composable
-fun OrientationLimitButtons(
-    setAERollPoint: () -> Unit,
-    setGDRollPoint: () -> Unit,
-    setTiltAwayLimit: () -> Unit,
-    setTiltTowardLimit: () -> Unit,
-    modifier: Modifier
-) {
-
-    Box (
-        contentAlignment = Alignment.Center,
-        modifier = modifier.width(150.dp)
-    ) {
-
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = modifier.size(150.dp)
-        ) {
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = modifier
-                    .height(50.dp)
-                    .fillMaxWidth()
-            ) {
-
-                Spacer(modifier = modifier.width(50.dp))
-
-                IconButton(
-                    onClick = { setTiltAwayLimit() },
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = modifier
-                        .border(1.dp, ViolinEsqueTheme.colors.text, shape = CircleShape)
-                        .size(50.dp)
+                        .height(80.dp)
+                        .fillMaxWidth()
+                        .clickable { setHighestPositionPitch() },
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.KeyboardArrowDown,
+                        imageVector = Icons.Filled.TripOrigin,
                         contentDescription = "Set tilt away limit",
-                        tint = ViolinEsqueTheme.colors.text
+                        tint = ViolinEsqueTheme.colors.stringActive,
+                        modifier = modifier.scale(0.5f)
+                    )
+                    Icon(
+                        imageVector = Icons.Filled.MoreVert,
+                        contentDescription = "Set tilt away limit",
+                        tint = ViolinEsqueTheme.colors.stringActive
                     )
                 }
 
-                Spacer(modifier = modifier.width(50.dp))
-            }
+                HorizontalLine(modifier = modifier)
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = modifier
-                    .height(50.dp)
-                    .fillMaxWidth()
-            ) {
-
-                IconButton(
-                    onClick = { setGDRollPoint() },
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = modifier
-                        .border(1.dp, ViolinEsqueTheme.colors.text, shape = CircleShape)
-                        .size(50.dp)
+                        .fillMaxWidth()
+                        .height(100.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.KeyboardArrowRight,
-                        contentDescription = "Set GD roll point",
-                        tint = ViolinEsqueTheme.colors.text
-                    )
+
+                    Box(contentAlignment = Alignment.Center, modifier = modifier
+                        .fillMaxHeight()
+                        .weight(1f)
+                        .clickable { setGDRollPoint() }
+                    ) {
+
+                        Box(
+                            modifier = modifier
+                                .height(80.dp)
+                                .width(5.dp)
+                                .background(color = ViolinEsqueTheme.colors.stringActive)
+                        )
+                    }
+
+                    VerticalLine(modifier = modifier)
+
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .clickable {
+                                resetRollPoints()
+                                resetPitchLimits()
+                            }
+                    ) {
+                        Text(
+                            text = "RESET",
+                            modifier = modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                            color = ViolinEsqueTheme.colors.text
+                        )
+                    }
+
+                    VerticalLine(modifier = modifier)
+
+                    Box(contentAlignment = Alignment.Center, modifier = modifier
+                        .fillMaxHeight()
+                        .weight(1f)
+                        .clickable { setAERollPoint() }
+                    ) {
+
+                        Box(
+                            modifier = modifier
+                                .height(80.dp)
+                                .width(2.dp)
+                                .background(color = ViolinEsqueTheme.colors.stringActive)
+                        )
+                    }
                 }
 
-                Spacer(modifier = modifier.width(50.dp))
+                HorizontalLine(modifier = modifier)
 
-                IconButton(
-                    onClick = { setAERollPoint() },
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = modifier
-                        .border(1.dp, ViolinEsqueTheme.colors.text, shape = CircleShape)
-                        .size(50.dp)
+                        .height(80.dp)
+                        .fillMaxWidth()
+                        .clickable { setLowestPositionPitch() },
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.KeyboardArrowLeft,
-                        contentDescription = "Set AE roll point",
-                        tint = ViolinEsqueTheme.colors.text
-                    )
-                }
-            }
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = modifier
-                    .height(50.dp)
-                    .fillMaxWidth()
-            ) {
-
-                Spacer(modifier = modifier.width(50.dp))
-
-                IconButton(
-                    onClick = { setTiltTowardLimit() },
-                    modifier = modifier
-                        .border(1.dp, ViolinEsqueTheme.colors.text, shape = CircleShape)
-                        .size(50.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.KeyboardArrowUp,
+                        imageVector = Icons.Filled.MoreVert,
                         contentDescription = "Set tilt toward limit",
-                        tint = ViolinEsqueTheme.colors.text
+                        tint = ViolinEsqueTheme.colors.stringActive
+                    )
+                    Icon(
+                        imageVector = Icons.Filled.TripOrigin,
+                        contentDescription = "Set tilt toward limit",
+                        tint = ViolinEsqueTheme.colors.stringActive,
+                        modifier = modifier.scale(0.5f)
                     )
                 }
-
-                Spacer(modifier = modifier.width(50.dp))
             }
         }
     }

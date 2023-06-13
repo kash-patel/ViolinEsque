@@ -16,6 +16,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.ShapeLine
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -46,60 +51,5 @@ fun RollCalibrationScreen(
             .padding(30.dp)
     ) {
 
-        StringsContainer(
-            currentStringLiveData = currentStringLiveData,
-            modifier = modifier.height(50.dp)
-        )
-
-        HorizontalLine(modifier = modifier)
-
-        Row(verticalAlignment = Alignment.CenterVertically,
-            modifier = modifier
-                .fillMaxWidth()
-                .height(100.dp)
-        ) {
-
-            Box (contentAlignment = Alignment.Center, modifier = modifier
-                .fillMaxHeight()
-                .weight(1f)
-                .clickable { setGDRollPoint() }
-            ) {
-
-                Box (
-                    modifier = modifier
-                        .height(80.dp)
-                        .width(5.dp)
-                        .background(color = ViolinEsqueTheme.colors.stringActive)
-                )
-            }
-
-            VerticalLine(modifier = modifier)
-
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .clickable { resetRollPoints() }
-            ) {
-                Text(text = "RESET", modifier = modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-            }
-
-            VerticalLine(modifier = modifier)
-
-            Box (contentAlignment = Alignment.Center, modifier = modifier
-                .fillMaxHeight()
-                .weight(1f)
-                .clickable { setAERollPoint() }
-            ) {
-
-                Box (
-                    modifier = modifier
-                        .height(80.dp)
-                        .width(2.dp)
-                        .background(color = ViolinEsqueTheme.colors.stringActive)
-                )
-            }
-        }
     }
 }

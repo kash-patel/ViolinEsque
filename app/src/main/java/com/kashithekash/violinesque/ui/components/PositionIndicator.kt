@@ -26,11 +26,8 @@ import com.kashithekash.violinesque.ui.theme.ViolinEsqueTheme
 fun PositionIndicatorRail (
     handPositionsMutableList: MutableList<Int>,
     currentHandPositionIndexLiveData: LiveData<Int>,
-    invertPitchLiveData: MutableLiveData<Boolean>,
     modifier: Modifier = Modifier
 ) {
-
-    val invertPitch by invertPitchLiveData.observeAsState(false)
 
     Column(modifier = modifier.width(PositionIndicatorRailWidth)) {
 

@@ -24,31 +24,9 @@ object InterfaceConfig : ViolinEsqueDestination {
     override val route = "interface_config"
 }
 
-/*
-object AudioSettings : ViolinEsqueDestination {
-    override val icon = Icons.Filled.Tune
-    override val route = "audio_settings"
-}
-*/
-
 object OrientationSettings : ViolinEsqueDestination {
     override val icon = Icons.Filled.Settings
     override val route = "orientation_settings"
-}
-
-object RollCalibration : ViolinEsqueDestination {
-    override val icon = Icons.Filled.SwapHoriz
-    override val route = "${OrientationSettings.route}/roll_calibration"
-}
-
-object PitchCalibration : ViolinEsqueDestination {
-    override val icon = Icons.Filled.SwapVert
-    override val route = "${OrientationSettings.route}/pitch_calibration"
-}
-
-object YawCalibration : ViolinEsqueDestination {
-    override val icon = Icons.Filled.ScreenRotation
-    override val route = "${OrientationSettings.route}/yaw_calibration"
 }
 
 val violinEsqueScreens = listOf(Play, InterfaceConfig, OrientationSettings)

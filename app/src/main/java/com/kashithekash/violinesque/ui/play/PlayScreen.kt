@@ -61,7 +61,6 @@ fun PlayScreen (
     ) {
 
         PositionIndicatorRail(
-            invertPitchLiveData = invertPitchLiveData,
             handPositionsMutableList = handPositionsMutableList,
             currentHandPositionIndexLiveData = currentHandPositionIndexLiveData
         )

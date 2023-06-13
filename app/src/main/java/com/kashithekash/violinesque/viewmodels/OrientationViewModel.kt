@@ -1,6 +1,7 @@
 package com.kashithekash.violinesque.viewmodels
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -39,11 +40,11 @@ class OrientationViewModel(application: Application) : AndroidViewModel(applicat
     private var currentRoll: Float = 0f
     private var currentPitch: Float = 0f
 
-    private var GDRollPoint: Float = -Pi / 4
-    private var AERollPoint: Float = Pi / 4
+    private var GDRollPoint: Float = -Pi / 6
+    private var AERollPoint: Float = Pi / 6
 
-    private var tiltAwayPitch: Float = 0f
-    private var tiltTowardPitch: Float = -Pi / 4
+    private var lowestPositionPitch: Float = 0f
+    private var highestPositionPitch: Float = -Pi / 4
 
     private lateinit var prefRepo: PrefRepo
 
@@ -82,39 +83,56 @@ class OrientationViewModel(application: Application) : AndroidViewModel(applicat
         viewModelScope.launch { soundManagerStringBased.manageDString() }
         viewModelScope.launch { soundManagerStringBased.manageAString() }
         viewModelScope.launch { soundManagerStringBased.manageEString() }
-//        viewModelScope.launch { soundManagerStringBased.manageHarmonics() }
     }
 
     fun releaseResources () {
         soundManagerStringBased.release()
     }
 
-    fun toggleInvertPitch () {
-        invertPitchLiveData.value = !invertPitchLiveData.value!!
-        Config.setInvertPitch(!Config.invertPitch)
-        prefRepo.setInvertPitch(Config.invertPitch)
+//    fun toggleInvertPitch () {
+//        invertPitchLiveData.value = !invertPitchLiveData.value!!
+//        Config.setInvertPitch(!Config.invertPitch)
+//        prefRepo.setInvertPitch(Config.invertPitch)
+//    }
+
+    private fun setInvertPitch (newInvertPitch: Boolean) {
+        invertPitchLiveData.value = newInvertPitch
+        Config.setInvertPitch(newInvertPitch)
+        prefRepo.setInvertPitch(newInvertPitch)
     }
 
-    fun toggleInvertRoll () {
-        invertRollLiveData.value = !invertRollLiveData.value!!
-        Config.setInvertRoll(!Config.invertRoll)
-        prefRepo.setInvertRoll(Config.invertRoll)
+//    fun toggleInvertRoll () {
+//        invertRollLiveData.value = !invertRollLiveData.value!!
+//        Config.setInvertRoll(!Config.invertRoll)
+//        prefRepo.setInvertRoll(Config.invertRoll)
+//    }
+
+    private fun setInvertRoll (newInvertRoll: Boolean) {
+        invertRollLiveData.value = newInvertRoll
+        Config.setInvertRoll(newInvertRoll)
+        prefRepo.setInvertRoll(newInvertRoll)
     }
 
     fun setGDRollPoint () {
+
         GDRollPoint = currentRoll
         Config.setRollCentre((GDRollPoint + AERollPoint) / 2)
-        Config.setStringRollRange((AERollPoint - GDRollPoint) / 3)
+        Config.setStringRollRange(abs(AERollPoint - GDRollPoint) / 3)
         prefRepo.setRollCentre(Config.rollCentre)
         prefRepo.setStringRollRange(Config.stringRollRange)
+
+        setInvertRoll(GDRollPoint > AERollPoint)
     }
 
     fun setAERollPoint () {
+
         AERollPoint = currentRoll
         Config.setRollCentre((GDRollPoint + AERollPoint) / 2)
-        Config.setStringRollRange((AERollPoint - GDRollPoint) / 3)
+        Config.setStringRollRange(abs(AERollPoint - GDRollPoint) / 3)
         prefRepo.setRollCentre(Config.rollCentre)
         prefRepo.setStringRollRange(Config.stringRollRange)
+
+        setInvertRoll(GDRollPoint > AERollPoint)
     }
 
     fun resetRollPoints () {
@@ -124,30 +142,59 @@ class OrientationViewModel(application: Application) : AndroidViewModel(applicat
         Config.setStringRollRange((AERollPoint - GDRollPoint) / 3)
         prefRepo.setRollCentre(Config.rollCentre)
         prefRepo.setStringRollRange(Config.stringRollRange)
+
+        setInvertRoll(false)
     }
 
-    fun setTiltAwayLimit () {
-        tiltAwayPitch = currentPitch
-        Config.setPitchCentre((tiltAwayPitch + tiltTowardPitch) / 2)
-        Config.setTotalPitchRange(tiltTowardPitch - tiltAwayPitch)
+    fun setHighestPositionPitch () {
+        lowestPositionPitch = currentPitch
+        Config.setPitchCentre((lowestPositionPitch + highestPositionPitch) / 2)
+        Config.setTotalPitchRange(-abs(highestPositionPitch - lowestPositionPitch))
         prefRepo.setPitchCentre(Config.pitchCentre)
         prefRepo.setTotalPitchRange(Config.totalPitchRange)
+
+        setInvertPitch(highestPositionPitch > lowestPositionPitch)
     }
 
-    fun setTiltTowardLimit () {
-        tiltTowardPitch = currentPitch
-        Config.setPitchCentre((tiltAwayPitch + tiltTowardPitch) / 2)
-        Config.setTotalPitchRange(tiltTowardPitch - tiltAwayPitch)
+    fun setLowestPositionPitch () {
+        highestPositionPitch = currentPitch
+        Config.setPitchCentre((lowestPositionPitch + highestPositionPitch) / 2)
+        Config.setTotalPitchRange(-abs(highestPositionPitch - lowestPositionPitch))
         prefRepo.setPitchCentre(Config.pitchCentre)
         prefRepo.setTotalPitchRange(Config.totalPitchRange)
+
+        setInvertPitch(highestPositionPitch > lowestPositionPitch)
     }
 
-    fun resetTiltLimits () {
-        tiltAwayPitch = 0f
-        tiltTowardPitch = -Pi / 4
-        Config.setPitchCentre((tiltAwayPitch + tiltTowardPitch) / 2)
-        Config.setTotalPitchRange(tiltTowardPitch - tiltAwayPitch)
+    fun resetHandPositionPitchLimits () {
+        lowestPositionPitch = 0f
+        highestPositionPitch = -Pi / 4
+        Config.setPitchCentre((lowestPositionPitch + highestPositionPitch) / 2)
+        Config.setTotalPitchRange(-abs(highestPositionPitch - lowestPositionPitch))
         prefRepo.setPitchCentre(Config.pitchCentre)
         prefRepo.setTotalPitchRange(Config.totalPitchRange)
+
+        setInvertPitch(false)
+    }
+
+    fun resetAll () {
+
+        AERollPoint = Pi / 6
+        GDRollPoint = -Pi / 6
+        Config.setRollCentre((GDRollPoint + AERollPoint) / 2)
+        Config.setStringRollRange((AERollPoint - GDRollPoint) / 3)
+        prefRepo.setRollCentre(Config.rollCentre)
+        prefRepo.setStringRollRange(Config.stringRollRange)
+
+        setInvertRoll(false)
+
+        lowestPositionPitch = 0f
+        highestPositionPitch = -Pi / 4
+        Config.setPitchCentre((lowestPositionPitch + highestPositionPitch) / 2)
+        Config.setTotalPitchRange(-abs(highestPositionPitch - lowestPositionPitch))
+        prefRepo.setPitchCentre(Config.pitchCentre)
+        prefRepo.setTotalPitchRange(Config.totalPitchRange)
+
+        setInvertPitch(false)
     }
 }
