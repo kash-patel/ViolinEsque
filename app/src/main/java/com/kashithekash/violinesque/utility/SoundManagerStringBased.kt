@@ -12,30 +12,37 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.Timer
-import kotlin.concurrent.timerTask
-import kotlin.math.log
+import kotlin.math.cos
+import kotlin.math.exp
+import kotlin.math.ln
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
+import kotlin.math.sqrt
 import kotlin.time.Duration.Companion.milliseconds
 
-private const val SOUND_UPDATE_DELAY_MS = 10
-//private val HalfToneFrequencyMultiplier = 2.0.pow(1 / 12)
-private const val MAX_VOLUME : Float = 1f
-private val defaultDispatcher: CoroutineDispatcher = Dispatchers.Default
+private const val SoundUpdateDelayMs = 10
+private const val VibratoRate: Int = 8    // In Hertz
+private const val VibratoPitchAmplitude: Float = 0.25f
+private val VibratoRateWaveAmplitude: Float = 2.0.pow(VibratoPitchAmplitude / 12.0).toFloat()
+private const val VolumeThreshold: Float = 0.01f
+private val LnVolumeThreshold: Float = ln(VolumeThreshold)
+private val DefaultDispatcher: CoroutineDispatcher = Dispatchers.Default
 
-private var fadeInTime: Int = Config.fadeInTime
-private var blendTime: Int = Config.blendTime
-private var fadeOutTime: Int = Config.fadeOutTime
+private var fadeInDuration: Int = Config.fadeInTime
+private var blendDuration: Int = Config.blendTime
+private var fadeOutDuration: Int = Config.fadeOutTime
 private var fadeOutDelay: Int = Config.fadeOutDelay
 
 private val isFingerPressed: BooleanArray = booleanArrayOf(false, false, false, false, false, false, false, false, false)
 private var currentHandPosition: Int = 1
 private var activeString: ViolinString? = null
 private var highestPressedFinger: Int = -1
+private var highestActivePosition: Int = -1
+private var activeStreamRate: Float = 1f
+private var silenceStreamID: Int = 0
 
-private var isTimerRunning: Boolean = false
+private var bodyVibrationContributions: Array<Float> = arrayOf(0f, 0f, 0f, 0f)  // For harmonics
 
 private val soundPool : SoundPool = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 
@@ -45,19 +52,22 @@ private val soundPool : SoundPool = if (Build.VERSION.SDK_INT >= Build.VERSION_C
         .build()
 
     SoundPool.Builder()
-        .setMaxStreams(3)
+        .setMaxStreams(4)
         .setAudioAttributes(audioAttributes)
         .build()
 
 } else {
-    SoundPool(3, AudioManager.USE_DEFAULT_STREAM_TYPE, 0)
+    SoundPool(4, AudioManager.USE_DEFAULT_STREAM_TYPE, 0)
 }
 
 private val noteSoundFileHashMap : HashMap<Int, Int> = HashMap(1)
 
 class SoundManagerStringBased (context: Context) {
 
-    init { loadSoundFiles(context) }
+    init {
+        loadSoundFiles(context)
+//        playSilence()
+    }
 
     fun handleButtonTouch (position: Int) {
 
@@ -75,8 +85,6 @@ class SoundManagerStringBased (context: Context) {
         if (position != highestPressedFinger) return
 
         highestPressedFinger = getHighestPressedFinger()
-
-        isTimerRunning = true
     }
 
     fun handleStringChange (newString: ViolinString) {
@@ -91,6 +99,9 @@ class SoundManagerStringBased (context: Context) {
 
     private suspend fun manageString (string: ViolinString) {
 
+        var time: Long = 0
+        var fadeInStartTime: Long = 0
+        var fadeOutStartTime: Long = 0
         var cachedHighestPressedFinger: Int = -1
         var cachedHandPosition: Int = 1
         var activeStreamID: Int = 0
@@ -117,11 +128,13 @@ class SoundManagerStringBased (context: Context) {
                         if (fadingStreamID > 0) stop(fadingStreamID)
                         fadingStreamID = activeStreamID
                         fadingStreamVolume = activeStreamVolume
+                        fadeOutStartTime = time + fadeOutDelay
                     }
 
                     // Start new stream at current string and position
                     activeStreamID = if (cachedHighestPressedFinger == -1) 0 else play(string, calculateNoteMapIndex(cachedHandPosition, cachedHighestPressedFinger))
                     activeStreamVolume = 0f
+                    fadeInStartTime = time
                 }
             }
 
@@ -136,46 +149,88 @@ class SoundManagerStringBased (context: Context) {
                     stop(fadingStreamID)
                     fadingStreamID = activeStreamID
                     fadingStreamVolume = activeStreamVolume
+                    fadeOutStartTime = time + fadeOutDelay
                     activeStreamID = 0
                     activeStreamVolume = 0f
                 }
             }
 
             // Increase active stream volume
-            if (activeStreamID > 0 && activeStreamVolume < MAX_VOLUME) {
+            if (activeStreamID > 0 && activeStreamVolume < 1f - VolumeThreshold) {
 
-                activeStreamVolume += if (fadingStreamID > 0)
-                    MAX_VOLUME * SOUND_UPDATE_DELAY_MS / blendTime
-                else MAX_VOLUME * SOUND_UPDATE_DELAY_MS / fadeInTime
+                // Linear fade
+//                activeStreamVolume += if (fadingStreamID > 0)
+//                    (MAX_VOLUME - INITIAL_VOLUME) * SOUND_UPDATE_DELAY_MS / blendTime
+//                else (MAX_VOLUME - INITIAL_VOLUME) * SOUND_UPDATE_DELAY_MS / fadeInTime
 
-                setVolume(activeStreamID, min(MAX_VOLUME, activeStreamVolume))
+                // Experimental logarithmic fade-in
+//                activeStreamVolume = if (fadingStreamID > 0)
+//                    -exp(LnVolumeThreshold / blendDuration).pow((time - fadeInStartTime).toInt()) + 1f
+//                else
+//                    -exp(LnVolumeThreshold / fadeInDuration).pow((time - fadeInStartTime).toInt()) + 1f
+
+                // Experimental quadratic fade-in
+                activeStreamVolume = if (fadingStreamID > 0)
+                    sqrt((time - fadeInStartTime).toFloat() / blendDuration).coerceIn(0f, 1f)
+                else
+                    sqrt((time - fadeInStartTime).toFloat() / fadeOutDuration).coerceIn(0f, 1f)
+
+                setVolume(activeStreamID, min(1f, activeStreamVolume))
             }
 
             // Decrease fading stream volume
-            if (fadingStreamID > 0 && fadingStreamVolume > 0 && !isTimerRunning) {
+            if (fadingStreamID > 0 && fadingStreamVolume > 0 + VolumeThreshold && time >= fadeOutStartTime) {
 
-                fadingStreamVolume -= if (cachedHighestPressedFinger > -1 || activeStreamID > 0)
-                    MAX_VOLUME * SOUND_UPDATE_DELAY_MS / blendTime
+                // Linear fade-out
+//                fadingStreamVolume -= if (cachedHighestPressedFinger > -1 || activeStreamID > 0)
+//                    MAX_VOLUME * SOUND_UPDATE_DELAY_MS / blendDuration
+//                else MAX_VOLUME * SOUND_UPDATE_DELAY_MS / fadeOutDuration
+
+                // Experimental logarithmic fade-out
+                fadingStreamVolume = if (cachedHighestPressedFinger > -1 || activeStreamID > 0)
+                    exp(LnVolumeThreshold / blendDuration).pow((time - fadeOutStartTime).toInt())
                 else
-                    MAX_VOLUME * SOUND_UPDATE_DELAY_MS / fadeOutTime
+                    exp(LnVolumeThreshold / fadeOutDuration).pow((time - fadeOutStartTime).toInt())
+
+                // Experimental quadratic fade-out
+//                fadingStreamVolume = if (cachedHighestPressedFinger > -1 || activeStreamID > 0)
+//                    sqrt((fadeOutStartTime - time).toFloat() / blendDuration + 1)
+//                else
+//                    sqrt((fadeOutStartTime - time).toFloat() / fadeOutDuration + 1)
+
+                // Experimental quadratic fade-out 2
+//                fadingStreamVolume = if (cachedHighestPressedFinger > -1 || activeStreamID > 0)
+//                    ((time - fadeOutStartTime).toFloat() / blendDuration - 1).pow(2).coerceIn(0f, MAX_VOLUME)
+//                else
+//                    ((time - fadeOutStartTime).toFloat() / fadeOutDuration - 1).pow(2).coerceIn(0f, MAX_VOLUME)
 
                 setVolume(fadingStreamID, max(0f, fadingStreamVolume))
             }
 
-            else if (fadingStreamID > 0 && fadingStreamVolume <= 0) {
+            else if (fadingStreamID > 0 && fadingStreamVolume <= 0 + VolumeThreshold) {
                 stop(fadingStreamID)
                 fadingStreamID = 0
                 fadingStreamVolume = 0f
             }
 
-            delay(SOUND_UPDATE_DELAY_MS.milliseconds)
+            // Vibrato
+//            if (activeStreamID > 0 && activeStreamVolume >= 0.8f) {
+//                setRate(
+//                    activeStreamID,
+//                    activeStreamRate * (2 + (1 - VibratoRateWaveAmplitude) * cos(VibratoRate * time.toDouble()).toFloat() - VibratoRateWaveAmplitude)
+//                )
+//            }
+
+            bodyVibrationContributions[string.ordinal] = max(fadingStreamVolume, activeStreamVolume)
+
+            time += SoundUpdateDelayMs
+            delay(SoundUpdateDelayMs.milliseconds)
         }
     }
 
-
     suspend fun manageGString () {
 
-        withContext(defaultDispatcher) {
+        withContext(DefaultDispatcher) {
             launch {
                 manageString(ViolinString.G)
             }
@@ -184,7 +239,7 @@ class SoundManagerStringBased (context: Context) {
 
     suspend fun manageDString () {
 
-        withContext(defaultDispatcher) {
+        withContext(DefaultDispatcher) {
             launch {
                 manageString(ViolinString.D)
             }
@@ -193,7 +248,7 @@ class SoundManagerStringBased (context: Context) {
 
     suspend fun manageAString () {
 
-        withContext(defaultDispatcher) {
+        withContext(DefaultDispatcher) {
             launch {
                 manageString(ViolinString.A)
             }
@@ -202,52 +257,30 @@ class SoundManagerStringBased (context: Context) {
 
     suspend fun manageEString () {
 
-        withContext(defaultDispatcher) {
+        withContext(DefaultDispatcher) {
             launch {
                 manageString(ViolinString.E)
             }
         }
     }
 
-    suspend fun manageTimer () {
-
-        withContext(defaultDispatcher) {
-
-            var time: Int = fadeOutDelay
-
-            while (true) {
-
-                if (!isTimerRunning) continue
-
-                if (time <= 0) {
-                    isTimerRunning = false
-                    time = fadeOutDelay
-                }
-
-                time -= SOUND_UPDATE_DELAY_MS
-
-                delay(SOUND_UPDATE_DELAY_MS.milliseconds)
-            }
-        }
-    }
-
     fun setFadeInTime (newFadeInTime: Int) {
-        fadeInTime = newFadeInTime
+        fadeInDuration = newFadeInTime
     }
 
     fun setBlendTime (newBlendTime: Int) {
-        blendTime = newBlendTime
+        blendDuration = newBlendTime
     }
 
     fun setFadeOutTime (newFadeOutTime: Int) {
-        fadeOutTime = newFadeOutTime
+        fadeOutDuration = newFadeOutTime
     }
 
     fun setFadeOutDelay (newFadeOutDelay: Int) {
         fadeOutDelay = newFadeOutDelay
     }
 
-    private fun play (string: ViolinString, position: Int, volume: Float = 0f) : Int {
+    private fun play (string: ViolinString, position: Int, volume: Float = 0f, rate: Float = 1f) : Int {
 
         /*
         Trying out dynamically produced sound centred around A4 (440 Hz).
@@ -258,6 +291,8 @@ class SoundManagerStringBased (context: Context) {
         So, a note n semitones from A4 has the rate 2^(n / 12).
         */
 
+        activeStreamRate = 2.0.pow((position % 12) / 12.0).toFloat()
+
         val noteMapKey: Int = string.ordinal * 10 + position / 12
         val streamID = soundPool.play(
             noteSoundFileHashMap[noteMapKey]!!,
@@ -265,7 +300,7 @@ class SoundManagerStringBased (context: Context) {
             volume,
             0,
             -1,
-            2.0.pow((position % 12) / 12.0).toFloat()
+            activeStreamRate
         )
 
         Log.w("SoundManager", "Started $streamID")
@@ -282,6 +317,10 @@ class SoundManagerStringBased (context: Context) {
         soundPool.setVolume(streamID, newVolume, newVolume)
     }
 
+    private fun setRate (streamID: Int, newRate: Float) {
+        soundPool.setRate(streamID, newRate)
+    }
+
     private fun getHighestPressedFinger () : Int {
 
         var maxIndex: Int = -1
@@ -295,6 +334,14 @@ class SoundManagerStringBased (context: Context) {
     private fun calculateNoteMapIndex(handPosition: Int, fingerPosition: Int) : Int {
         return if (fingerPosition == 0) 0
         else handPostionStartIndices[handPosition] + fingerPosition
+    }
+
+    private fun playSilence () {
+        silenceStreamID = soundPool.play(noteSoundFileHashMap[0]!!, 0f, 0f, -1, -1, 1f)
+    }
+
+    private fun stopSilence () {
+        stop(silenceStreamID)
     }
 
     private fun loadSoundFiles (context: Context) {
@@ -317,6 +364,7 @@ class SoundManagerStringBased (context: Context) {
     }
 
     fun release () {
+//        stopSilence()
         soundPool.release()
     }
 }

@@ -17,19 +17,23 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.kashithekash.violinesque.navigation.AudioSettings
+//import com.kashithekash.violinesque.navigation.AudioSettings
 import com.kashithekash.violinesque.navigation.InterfaceConfig
 import com.kashithekash.violinesque.navigation.Play
-import com.kashithekash.violinesque.navigation.Calibration
+import com.kashithekash.violinesque.navigation.OrientationSettings
+import com.kashithekash.violinesque.navigation.PitchCalibration
+import com.kashithekash.violinesque.navigation.RollCalibration
+import com.kashithekash.violinesque.navigation.YawCalibration
 import com.kashithekash.violinesque.navigation.violinEsqueScreens
-import com.kashithekash.violinesque.ui.audioSettings.AudioSettingsScreen
+import com.kashithekash.violinesque.ui.calibration.PitchCalibrationScreen
+import com.kashithekash.violinesque.ui.calibration.RollCalibrationScreen
+//import com.kashithekash.violinesque.ui.audioSettings.AudioSettingsScreen
 import com.kashithekash.violinesque.ui.components.NavBar
-import com.kashithekash.violinesque.ui.components.PositionIndicatorRail
 import com.kashithekash.violinesque.ui.interfaceConfig.InterfaceConfigScreen
 import com.kashithekash.violinesque.ui.play.PlayScreen
 import com.kashithekash.violinesque.viewmodels.InterfaceConfigViewModel
 import com.kashithekash.violinesque.ui.theme.ViolinEsqueTheme
-import com.kashithekash.violinesque.ui.calibration.CalibrationScreen
+import com.kashithekash.violinesque.ui.orientationSettings.OrientationSettingsScreen
 import com.kashithekash.violinesque.utility.Config
 import com.kashithekash.violinesque.utility.PrefRepo
 import com.kashithekash.violinesque.utility.SoundManagerStringBased
@@ -54,6 +58,7 @@ class ViolinEsqueActivity : ComponentActivity() {
             savedFadeOutTime = prefRepo.getFadeOutTime(),
             savedFadeOutDelay = prefRepo.getFadeOutDelay(),
             savedExpandButtons = prefRepo.getExpandButtons(),
+            savedAlignButtonsToBottom = prefRepo.getAlignButtonsToBottom(),
             savedInvertRoll = prefRepo.getInvertRoll(),
             savedInvertPitch = prefRepo.getInvertPitch(),
             savedRollCentre = prefRepo.getRollCentre(),
@@ -116,27 +121,25 @@ fun ViolinEsqueApp (
         val currentBackStack by navController.currentBackStackEntryAsState()
         val currentDestination = currentBackStack?.destination
         val currentScreen = violinEsqueScreens.find { it.route == currentDestination?.route } ?: Play
+        val navBarDestination = violinEsqueScreens.any { it.route == currentDestination?.route }
 
         Surface (color = ViolinEsqueTheme.colors.background) {
 
             Row(Modifier.fillMaxSize()) {
 
-                NavBar(
-                    allScreens = violinEsqueScreens,
-                    onTabSelect = { screen -> navController.navigateSingleTopTo(screen.route) },
-                    currentScreen = currentScreen
-                )
+                if (navBarDestination) {
 
-                PositionIndicatorRail(
-                    invertPitchLiveData = orientationViewModel.invertPitchLiveData,
-                    handPositionsMutableList = interfaceConfigViewModel.handPositionsMutableList,
-                    currentHandPositionIndexLiveData = orientationViewModel.currentHandPositionIndexLiveData
-                )
+                    NavBar(
+                        allScreens = violinEsqueScreens,
+                        onTabSelect = { screen -> navController.navigateSingleTopTo(screen.route) },
+                        currentScreen = currentScreen
+                    )
+                }
 
                 ViolinEsqueNavHost(
                     orientationViewModel = orientationViewModel,
                     interfaceConfigViewModel = interfaceConfigViewModel,
-                    audioSettingsViewModel = audioSettingsViewModel,
+//                    audioSettingsViewModel = audioSettingsViewModel,
                     navController = navController
                 )
             }
@@ -148,7 +151,7 @@ fun ViolinEsqueApp (
 fun ViolinEsqueNavHost(
     orientationViewModel: OrientationViewModel,
     interfaceConfigViewModel: InterfaceConfigViewModel,
-    audioSettingsViewModel: AudioSettingsViewModel,
+//    audioSettingsViewModel: AudioSettingsViewModel,
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
@@ -160,12 +163,14 @@ fun ViolinEsqueNavHost(
 
         composable(route = Play.route) {
             PlayScreen(
+                invertPitchLiveData = orientationViewModel.invertPitchLiveData,
                 currentStringLiveData = orientationViewModel.currentStringLiveData,
+                handPositionsMutableList = interfaceConfigViewModel.handPositionsMutableList,
                 currentHandPositionIndexLiveData = orientationViewModel.currentHandPositionIndexLiveData,
                 onButtonTouch = { n -> interfaceConfigViewModel.buttonTouched(n) },
                 onButtonRelease = { n -> interfaceConfigViewModel.buttonReleased(n) },
                 expandButtonsLiveData = interfaceConfigViewModel.expandButtonsLiveData,
-                handPositionsListMutable = interfaceConfigViewModel.handPositionsMutableList
+                alignButtonsBottomLiveData = interfaceConfigViewModel.alignButtonsToBottomLiveData
             )
         }
 
@@ -173,13 +178,16 @@ fun ViolinEsqueNavHost(
             InterfaceConfigScreen(
                 expandButtonsLiveData = interfaceConfigViewModel.expandButtonsLiveData,
                 onSetExpandButtons = { newExpandButtons -> interfaceConfigViewModel.setExpandButtons(newExpandButtons) },
+                alignButtonsBottomLiveData = interfaceConfigViewModel.alignButtonsToBottomLiveData,
+                onSetAlignButtonsBottom = { newAlignButtonsBottom -> interfaceConfigViewModel.setAlignButtonsToBottom(newAlignButtonsBottom) },
                 handPositionsMutableList = interfaceConfigViewModel.handPositionsMutableList,
-                addHandPostion = { i, n -> interfaceConfigViewModel.addHandPosition(i, n) },
+                addHandPosition = { i, n -> interfaceConfigViewModel.addHandPosition(i, n) },
                 removeHandPosition = { i -> interfaceConfigViewModel.removeHandPosition(i) },
-                changeHandPosition = { i, n -> interfaceConfigViewModel.changeHandPosition(i, n) }
+                changeHandPosition = { i, n -> interfaceConfigViewModel.changeHandPosition(i, n); orientationViewModel.handleHandPositionChanged(i, n) }
             )
         }
 
+        /*
         composable(route = AudioSettings.route) {
             AudioSettingsScreen(
                 getFadeInTime = { audioSettingsViewModel.getFadeInTime() },
@@ -192,17 +200,55 @@ fun ViolinEsqueNavHost(
                 onFadeOutDelayChange = { newFadeOutDelay -> audioSettingsViewModel.setFadeOutDelay(newFadeOutDelay) },
             )
         }
+        */
 
-        composable(route = Calibration.route) {
-            CalibrationScreen(
+        /*
+        composable(route = OrientationSettingsGraph.route) {
+            OrientationSettingsNavGraph(
                 currentStringLiveData = orientationViewModel.currentStringLiveData,
                 invertRollLiveData = orientationViewModel.invertRollLiveData,
                 toggleInvertRoll = { orientationViewModel.toggleInvertRoll() },
                 invertPitchLiveData = orientationViewModel.invertPitchLiveData,
                 toggleInvertPitch = { orientationViewModel.toggleInvertPitch() },
+                handPositionsMutableList = interfaceConfigViewModel.handPositionsMutableList,
+                currentHandPositionIndexLiveData = orientationViewModel.currentHandPositionIndexLiveData,
                 setGDRollPoint = { orientationViewModel.setGDRollPoint() },
                 setAERollPoint = { orientationViewModel.setAERollPoint() },
                 resetRollPoints = { orientationViewModel.resetRollPoints() },
+                setTiltAwayLimit = { orientationViewModel.setTiltAwayLimit() },
+                setTiltTowardLimit = { orientationViewModel.setTiltTowardLimit() },
+                resetTiltLimits = { orientationViewModel.resetTiltLimits() },
+                navController = rememberNavController()
+            )
+        }
+        */
+
+        composable(route = OrientationSettings.route) {
+            OrientationSettingsScreen(
+                invertRollLiveData = orientationViewModel.invertRollLiveData,
+                toggleInvertRoll = { orientationViewModel.toggleInvertRoll() },
+                invertPitchLiveData = orientationViewModel.invertPitchLiveData,
+                toggleInvertPitch = { orientationViewModel.toggleInvertPitch() },
+                goToRollCalibrationScreen = { navController.navigate(RollCalibration.route) },
+                goToPitchCalibrationScreen = { navController.navigate(PitchCalibration.route) },
+                goToYawCalibrationScreen = { }
+            )
+        }
+
+        composable(route = RollCalibration.route) {
+            RollCalibrationScreen(
+                currentStringLiveData = orientationViewModel.currentStringLiveData,
+                setGDRollPoint = { orientationViewModel.setGDRollPoint() },
+                setAERollPoint = { orientationViewModel.setAERollPoint() },
+                resetRollPoints = { orientationViewModel.resetRollPoints() }
+            )
+        }
+
+        composable(route = PitchCalibration.route) {
+            PitchCalibrationScreen(
+                handPositionsMutableList = interfaceConfigViewModel.handPositionsMutableList,
+                currentHandPositionIndexLiveData = orientationViewModel.currentHandPositionIndexLiveData,
+                invertPitchLiveData = orientationViewModel.invertPitchLiveData,
                 setTiltAwayLimit = { orientationViewModel.setTiltAwayLimit() },
                 setTiltTowardLimit = { orientationViewModel.setTiltTowardLimit() },
                 resetTiltLimits = { orientationViewModel.resetTiltLimits() }

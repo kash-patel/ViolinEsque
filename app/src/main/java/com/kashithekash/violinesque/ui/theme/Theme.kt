@@ -26,13 +26,13 @@ private val DarkColorScheme = ViolinEsqueColors(
     button = Color.Transparent,
     buttonTouched = LightBlack,
     string = LightGrey,
-    stringActive = Red,
+    stringActive = Salmon,
     sliderBackground = DarkGrey,
     sliderThumb = LightGrey,
     text = DarkWhite,
     textAlt = Grey,
     textButton = DarkWhite,
-    textButtonTouched = Red,
+    textButtonTouched = Salmon,
     isDark = true
 )
 

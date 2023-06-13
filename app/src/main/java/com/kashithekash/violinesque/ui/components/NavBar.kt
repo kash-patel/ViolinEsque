@@ -38,7 +38,13 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.kashithekash.violinesque.navigation.InterfaceConfig
+import com.kashithekash.violinesque.navigation.OrientationSettings
+import com.kashithekash.violinesque.navigation.PitchCalibration
+import com.kashithekash.violinesque.navigation.Play
+import com.kashithekash.violinesque.navigation.RollCalibration
 import com.kashithekash.violinesque.navigation.ViolinEsqueDestination
+import com.kashithekash.violinesque.navigation.YawCalibration
 import com.kashithekash.violinesque.ui.theme.ViolinEsqueTheme
 
 @Composable

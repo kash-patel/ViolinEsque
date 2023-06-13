@@ -41,7 +41,7 @@ fun PositionIndicatorRail (
 
         for (i in 0 until handPositionsMutableList.count()) {
             PositionIndicatorDot(
-                index = if (invertPitch) handPositionsMutableList.count() - 1 - i else i,
+                index = i,
                 currentHandPositionIndexLiveData = currentHandPositionIndexLiveData,
                 modifier = modifier
             )

@@ -3,9 +3,10 @@ package com.kashithekash.violinesque.navigation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DensitySmall
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.ScreenRotation
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material.icons.filled.VerticalSplit
+import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.ui.graphics.vector.ImageVector
 
 interface ViolinEsqueDestination {
@@ -23,14 +24,31 @@ object InterfaceConfig : ViolinEsqueDestination {
     override val route = "interface_config"
 }
 
+/*
 object AudioSettings : ViolinEsqueDestination {
     override val icon = Icons.Filled.Tune
     override val route = "audio_settings"
 }
+*/
 
-object Calibration : ViolinEsqueDestination {
+object OrientationSettings : ViolinEsqueDestination {
     override val icon = Icons.Filled.Settings
-    override val route = "calibration"
+    override val route = "orientation_settings"
 }
 
-val violinEsqueScreens = listOf(Play, InterfaceConfig, AudioSettings, Calibration)
+object RollCalibration : ViolinEsqueDestination {
+    override val icon = Icons.Filled.SwapHoriz
+    override val route = "${OrientationSettings.route}/roll_calibration"
+}
+
+object PitchCalibration : ViolinEsqueDestination {
+    override val icon = Icons.Filled.SwapVert
+    override val route = "${OrientationSettings.route}/pitch_calibration"
+}
+
+object YawCalibration : ViolinEsqueDestination {
+    override val icon = Icons.Filled.ScreenRotation
+    override val route = "${OrientationSettings.route}/yaw_calibration"
+}
+
+val violinEsqueScreens = listOf(Play, InterfaceConfig, OrientationSettings)

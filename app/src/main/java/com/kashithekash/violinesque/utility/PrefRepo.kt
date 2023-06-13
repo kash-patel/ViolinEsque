@@ -36,6 +36,11 @@ class PrefRepo (context: Context) {
         editor.apply()
     }
 
+    fun setAlignButtonsToBottom (newAlignButtonsToBottom: Boolean) {
+        editor.putBoolean("align_buttons_to_bottom", newAlignButtonsToBottom)
+        editor.apply()
+    }
+
     fun setInvertPitch (newInvertPitch: Boolean) {
         editor.putBoolean("invert_pitch", newInvertPitch)
         editor.apply()
@@ -74,11 +79,11 @@ class PrefRepo (context: Context) {
     }
 
     fun getFadeInTime () : Int {
-        return sharedPrefs.getInt("fade_in_time", 10)
+        return sharedPrefs.getInt("fade_in_time", 100)
     }
 
     fun getBlendTime () : Int {
-        return sharedPrefs.getInt("Blend_time", 50)
+        return sharedPrefs.getInt("Blend_time", 100)
     }
 
     fun getFadeOutTime () : Int {
@@ -86,7 +91,7 @@ class PrefRepo (context: Context) {
     }
 
     fun getFadeOutDelay () : Int {
-        return sharedPrefs.getInt("fade_out_delay", 0)
+        return sharedPrefs.getInt("fade_out_delay", 100)
     }
 
     fun getRollCentre () : Float {
@@ -94,19 +99,23 @@ class PrefRepo (context: Context) {
     }
 
     fun getStringRollRange () : Float {
-        return sharedPrefs.getFloat("string_roll_range", 20f)
+        return sharedPrefs.getFloat("string_roll_range", -Pi / 3)
     }
 
     fun getPitchCentre () : Float {
-        return sharedPrefs.getFloat("pitch_centre", -45f)
+        return sharedPrefs.getFloat("pitch_centre", -Pi / 8)
     }
 
     fun getTotalPitchRange () : Float {
-        return sharedPrefs.getFloat("total_pitch_range", -90f)
+        return sharedPrefs.getFloat("total_pitch_range", -Pi / 4)
     }
 
     fun getExpandButtons () : Boolean {
         return sharedPrefs.getBoolean("expand_buttons", false)
+    }
+
+    fun getAlignButtonsToBottom () : Boolean {
+        return sharedPrefs.getBoolean("align_buttons_to_bottom", false)
     }
 
     fun getInvertPitch () : Boolean {

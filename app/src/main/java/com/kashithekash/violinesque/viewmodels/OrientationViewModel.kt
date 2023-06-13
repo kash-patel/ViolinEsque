@@ -1,7 +1,6 @@
 package com.kashithekash.violinesque.viewmodels
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -14,7 +13,6 @@ import com.kashithekash.violinesque.utility.RotationReader
 import com.kashithekash.violinesque.utility.SoundManagerStringBased
 import com.kashithekash.violinesque.utility.StringManager
 import com.kashithekash.violinesque.utility.ViolinString
-import com.kashithekash.violinesque.utility.handPostionStartIndices
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.sign
@@ -31,7 +29,7 @@ class OrientationViewModel(application: Application) : AndroidViewModel(applicat
     private val _currentStringLiveData: MutableLiveData<ViolinString> = MutableLiveData(null)
     val currentStringLiveData: LiveData<ViolinString> = _currentStringLiveData
 
-    private var cachedPositionIndex: Int = 0
+    private var cachedHandPositionIndex: Int = 0
     private val _currentHandPositionIndexLiveData: MutableLiveData<Int> = MutableLiveData(0)
     val currentHandPositionIndexLiveData: LiveData<Int> = _currentHandPositionIndexLiveData
 
@@ -61,10 +59,14 @@ class OrientationViewModel(application: Application) : AndroidViewModel(applicat
     fun updatePitch (pitch: Float, roll: Float) {
         currentPitch = if (abs(roll) >= Pi / 2) pitch.sign * Pi - pitch else pitch
         _currentHandPositionIndexLiveData.value = handPositionManager.calculateCurrentHandPositionIndex(currentPitch)
-        if (_currentHandPositionIndexLiveData.value != cachedPositionIndex) {
-            cachedPositionIndex = _currentHandPositionIndexLiveData.value!!
-            soundManagerStringBased.handleHandPositionChange(Config.handPositionsList[cachedPositionIndex])
+        if (_currentHandPositionIndexLiveData.value != cachedHandPositionIndex) {
+            cachedHandPositionIndex = _currentHandPositionIndexLiveData.value!!
+            soundManagerStringBased.handleHandPositionChange(Config.handPositionsList[cachedHandPositionIndex])
         }
+    }
+
+    fun handleHandPositionChanged (index: Int, newHandPosition: Int) {
+        if (index == _currentHandPositionIndexLiveData.value) soundManagerStringBased.handleHandPositionChange(newHandPosition)
     }
 
     fun setSoundManager (soundManagerStringBasedInstance: SoundManagerStringBased) {
@@ -80,7 +82,7 @@ class OrientationViewModel(application: Application) : AndroidViewModel(applicat
         viewModelScope.launch { soundManagerStringBased.manageDString() }
         viewModelScope.launch { soundManagerStringBased.manageAString() }
         viewModelScope.launch { soundManagerStringBased.manageEString() }
-        viewModelScope.launch { soundManagerStringBased.manageTimer() }
+//        viewModelScope.launch { soundManagerStringBased.manageHarmonics() }
     }
 
     fun releaseResources () {
@@ -116,8 +118,8 @@ class OrientationViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     fun resetRollPoints () {
-        AERollPoint = Pi / 4
-        GDRollPoint = -Pi / 4
+        AERollPoint = Pi / 6
+        GDRollPoint = -Pi / 6
         Config.setRollCentre((GDRollPoint + AERollPoint) / 2)
         Config.setStringRollRange((AERollPoint - GDRollPoint) / 3)
         prefRepo.setRollCentre(Config.rollCentre)

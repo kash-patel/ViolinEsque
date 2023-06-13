@@ -1,9 +1,9 @@
 package com.kashithekash.violinesque.ui.play
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.forEachGesture
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -32,6 +32,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import com.kashithekash.violinesque.ui.components.PositionIndicatorRail
 import com.kashithekash.violinesque.ui.theme.ViolinEsqueTheme
 import com.kashithekash.violinesque.utility.A_STRING_NOTES
 import com.kashithekash.violinesque.utility.D_STRING_NOTES
@@ -42,10 +44,12 @@ import com.kashithekash.violinesque.utility.handPostionStartIndices
 
 @Composable
 fun PlayScreen (
+    invertPitchLiveData: MutableLiveData<Boolean>,
     currentStringLiveData: LiveData<ViolinString>,
     currentHandPositionIndexLiveData: LiveData<Int>,
     expandButtonsLiveData: LiveData<Boolean>,
-    handPositionsListMutable: MutableList<Int>,
+    alignButtonsBottomLiveData: LiveData<Boolean>,
+    handPositionsMutableList: MutableList<Int>,
     onButtonTouch: (Int) -> Unit,
     onButtonRelease: (Int) -> Unit,
     modifier: Modifier = Modifier
@@ -55,6 +59,13 @@ fun PlayScreen (
         modifier = modifier
             .fillMaxSize()
     ) {
+
+        PositionIndicatorRail(
+            invertPitchLiveData = invertPitchLiveData,
+            handPositionsMutableList = handPositionsMutableList,
+            currentHandPositionIndexLiveData = currentHandPositionIndexLiveData
+        )
+
         BoxWithConstraints(
             modifier = modifier
                 .fillMaxSize()
@@ -63,7 +74,7 @@ fun PlayScreen (
 
             OpenStringButtonContainer(
                 currentHandPositionIndexLiveData,
-                handPositionsListMutable,
+                handPositionsMutableList,
                 onButtonTouch = onButtonTouch,
                 onButtonRelease = onButtonRelease,
                 modifier = modifier
@@ -76,11 +87,12 @@ fun PlayScreen (
 
         FingerPositionButtonsContainer(
             currentStringLiveData = currentStringLiveData,
-            handPositionsListMutable = handPositionsListMutable,
+            handPositionsListMutable = handPositionsMutableList,
             currentHandPositionIndexLiveData = currentHandPositionIndexLiveData,
             onButtonTouch = { n -> onButtonTouch(n) },
             onButtonRelease = { n -> onButtonRelease(n) },
             expandButtonsLiveData = expandButtonsLiveData,
+            alignButtonsBottomLiveData = alignButtonsBottomLiveData,
             modifier = modifier
         )
 
@@ -196,48 +208,33 @@ fun RowScope.FingerPositionButtonsContainer (
     onButtonTouch: (Int) -> Unit,
     onButtonRelease: (Int) -> Unit,
     expandButtonsLiveData: LiveData<Boolean>,
+    alignButtonsBottomLiveData: LiveData<Boolean>,
     modifier: Modifier
 ) {
 
     val expandButtons: Boolean by expandButtonsLiveData.observeAsState(false)
+    val alignButtonsBottom: Boolean by alignButtonsBottomLiveData.observeAsState(false)
+    val currentHandPositionIndex: Int by currentHandPositionIndexLiveData.observeAsState(0)
 
     regularButtonHeight = (LocalConfiguration.current.screenHeightDp / 12).dp
 
     Column (modifier = modifier
         .fillMaxSize()
-        .weight(1f)
+        .weight(1f),
+        verticalArrangement = if (alignButtonsBottom) Arrangement.Bottom else Arrangement.Center
     ) {
 
-        if (!expandButtons) {
-            Spacer(modifier = modifier
-                .fillMaxWidth()
-                .height(regularButtonHeight * 2)
-            )
-        }
+        for (i in 1..if (handPositionsListMutable[currentHandPositionIndex] == 15) 6 else 8) {
 
-        Column (modifier = modifier
-            .fillMaxSize()
-            .weight(1f)
-        ) {
-
-            for (i in 1..8) {
-
-                FingerPositionButton(
-                    fingerPosition = i,
-                    currentStringLiveData = currentStringLiveData,
-                    currentHandPositionIndexLiveData = currentHandPositionIndexLiveData,
-                    handPositionsListMutable = handPositionsListMutable,
-                    onButtonTouch = { n -> onButtonTouch(n) },
-                    onButtonRelease = { n -> onButtonRelease(n) },
-                    modifier = modifier
-                )
-            }
-        }
-
-        if (!expandButtons) {
-            Spacer(modifier = modifier
-                .fillMaxWidth()
-                .height(regularButtonHeight * 2)
+            FingerPositionButton(
+                expandButtons = expandButtons,
+                fingerPosition = i,
+                currentStringLiveData = currentStringLiveData,
+                currentHandPositionIndex = currentHandPositionIndex,
+                handPositionsListMutable = handPositionsListMutable,
+                onButtonTouch = { n -> onButtonTouch(n) },
+                onButtonRelease = { n -> onButtonRelease(n) },
+                modifier = modifier
             )
         }
     }
@@ -246,9 +243,10 @@ fun RowScope.FingerPositionButtonsContainer (
 
 @Composable
 fun ColumnScope.FingerPositionButton (
+    expandButtons: Boolean,
     fingerPosition: Int,
     currentStringLiveData: LiveData<ViolinString>,
-    currentHandPositionIndexLiveData: LiveData<Int>,
+    currentHandPositionIndex: Int,
     handPositionsListMutable: MutableList<Int>,
     onButtonTouch: (Int) -> Unit,
     onButtonRelease: (Int) -> Unit,
@@ -256,7 +254,6 @@ fun ColumnScope.FingerPositionButton (
 ) {
 
     val currentString: ViolinString by currentStringLiveData.observeAsState(ViolinString.A)
-    val currentHandPositionIndex by currentHandPositionIndexLiveData.observeAsState(0)
 
     val currentHandPosition = handPositionsListMutable[currentHandPositionIndex]
     val buttonNumber = handPostionStartIndices[currentHandPosition] + fingerPosition
@@ -264,8 +261,18 @@ fun ColumnScope.FingerPositionButton (
     var isTouched by remember { mutableStateOf(false) }
 
     Box(modifier = modifier
-        .fillMaxSize()
-        .weight(1f)
+        .then(
+            if (expandButtons)
+                Modifier
+                    .fillMaxSize()
+                    .weight(1f)
+            else
+                Modifier
+                    .fillMaxWidth()
+                    .height(regularButtonHeight)
+        )
+        .fillMaxWidth()
+        .height(regularButtonHeight)
         .background(color = if (isTouched) ViolinEsqueTheme.colors.buttonTouched else ViolinEsqueTheme.colors.button)
         .pointerInput(Unit) {
 
@@ -273,6 +280,7 @@ fun ColumnScope.FingerPositionButton (
 
                 awaitPointerEventScope {
 
+                    currentHandPosition
                     awaitFirstDown()
                     isTouched = true
                     onButtonTouch(fingerPosition)

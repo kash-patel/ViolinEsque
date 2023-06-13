@@ -2,23 +2,25 @@ package com.kashithekash.violinesque.utility
 
 object Config {
 
-    var fadeInTime: Int = 10
+    var fadeInTime: Int = 100
         private set
-    var blendTime: Int = 50
+    var blendTime: Int = 100
         private set
     var fadeOutTime: Int = 100
         private set
-    var fadeOutDelay: Int = 0
+    var fadeOutDelay: Int = 100
         private set
     var rollCentre: Float = 0f
         private set
-    var stringRollRange: Float = Pi / 4
+    var stringRollRange: Float = Pi / 3
         private set
-    var pitchCentre: Float = -Pi.toFloat() / 8
+    var pitchCentre: Float = -Pi / 8
         private set
-    var totalPitchRange: Float = -Pi.toFloat() / 4
+    var totalPitchRange: Float = -Pi / 4
         private set
     var expandButtons: Boolean = false
+        private set
+    var alignButtonsToBottom: Boolean = false
         private set
     var invertPitch: Boolean = false
         private set
@@ -37,6 +39,7 @@ object Config {
         savedPitchCentre: Float,
         savedTotalPitchRange: Float,
         savedExpandButtons: Boolean,
+        savedAlignButtonsToBottom: Boolean,
         savedInvertRoll: Boolean,
         savedInvertPitch: Boolean,
         savedHandPositionsList: List<Int>
@@ -50,6 +53,7 @@ object Config {
         pitchCentre = savedPitchCentre
         totalPitchRange = savedTotalPitchRange
         expandButtons = savedExpandButtons
+        alignButtonsToBottom = savedAlignButtonsToBottom
         invertRoll = savedInvertRoll
         invertPitch = savedInvertPitch
         handPositionsList = savedHandPositionsList
@@ -89,6 +93,10 @@ object Config {
 
     fun setExpandButtons (newExpandButtons: Boolean) {
         expandButtons = newExpandButtons
+    }
+
+    fun setAlignButtonsToBottom (newAlignButtonsToBottom: Boolean) {
+        alignButtonsToBottom = newAlignButtonsToBottom
     }
 
     fun setInvertRoll (newInvertRoll: Boolean) {
