@@ -1,14 +1,14 @@
 package com.kashithekash.violinesque.ui.theme
 import androidx.compose.ui.graphics.Color
 
-val md_theme_light_primary = Color(0xFF0090F0)
+val md_theme_light_primary = Color(0xFFD06020)
 val md_theme_light_onPrimary = Color(0xFFFFFFFF)
-val md_theme_light_primaryContainer = Color(0xFFC0D0F0)
-val md_theme_light_onPrimaryContainer = Color(0xFF002040)
-val md_theme_light_secondary = Color(0xFFD06020)
+val md_theme_light_primaryContainer = Color(0xFFF0D0C0)
+val md_theme_light_onPrimaryContainer = Color(0xFF402000)
+val md_theme_light_secondary = Color(0xFF0090F0)
 val md_theme_light_onSecondary = Color(0xFFFFFFFF)
-val md_theme_light_secondaryContainer = Color(0xFFF0D0C0)
-val md_theme_light_onSecondaryContainer = Color(0xFF402000)
+val md_theme_light_secondaryContainer = Color(0xFFC0D0F0)
+val md_theme_light_onSecondaryContainer = Color(0xFF002040)
 val md_theme_light_tertiary = Color(0xFF604020)
 val md_theme_light_onTertiary = Color(0xFFFFFFFF)
 val md_theme_light_tertiaryContainer = Color(0xFFF0D0A0)
