@@ -1,5 +1,6 @@
 package com.kashithekash.violinesque
 
+import android.app.Activity
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -11,6 +12,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -84,7 +86,9 @@ class ViolinEsqueActivity : ComponentActivity() {
         Log.w("", Config.stringRollRange.toString())
 
         super.onCreate(savedInstanceState)
+
         setContent {
+
             ViolinEsqueTheme {
 
                 ViolinEsqueApp(
