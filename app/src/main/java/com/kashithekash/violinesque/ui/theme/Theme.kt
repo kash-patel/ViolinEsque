@@ -97,12 +97,14 @@ fun ViolinEsqueTheme(
     val window = (view.context as Activity).window
 
     if (!view.isInEditMode) {
+
         SideEffect {
 
-            WindowCompat.setDecorFitsSystemWindows(window, false)
+            // Make app fullscreen
+            // WindowCompat.setDecorFitsSystemWindows(window, false)
 
-//            window.statusBarColor = colors.background.toArgb()
-            window.statusBarColor = Color.Transparent.toArgb()
+            window.statusBarColor = colors.background.toArgb()
+            window.navigationBarColor = colors.background.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !useDarkTheme
         }
     }

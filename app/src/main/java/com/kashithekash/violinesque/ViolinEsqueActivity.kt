@@ -47,8 +47,6 @@ class ViolinEsqueActivity : ComponentActivity() {
 
         prefRepo = PrefRepo(this)
 
-        Log.w("", Config.stringRollRange.toString())
-
         Config.init(
             savedFadeInTime = prefRepo.getFadeInTime(),
             savedBlendTime = prefRepo.getBlendTime(),
@@ -82,8 +80,6 @@ class ViolinEsqueActivity : ComponentActivity() {
             orientationViewModel.updateRoll(it[2], it[1])
             orientationViewModel.updatePitch(it[1], it[2])
         }
-
-        Log.w("", Config.stringRollRange.toString())
 
         super.onCreate(savedInstanceState)
 

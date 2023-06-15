@@ -67,7 +67,7 @@ fun SettingsRowSwitch(
                     uncheckedTrackColor = Color.Transparent,
                     uncheckedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                 ),
-                modifier = modifier.scale(0.8f).wrapContentHeight(),
+                modifier = modifier.scale(0.8f)
             )
         }
     }

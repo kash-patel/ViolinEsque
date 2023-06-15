@@ -115,13 +115,13 @@ fun OrientationSettingsScreen (
                     ) {
                         Icon(
                             imageVector = Icons.Filled.TripOrigin,
-                            contentDescription = "Set tilt away limit",
+                            contentDescription = "Set lowest hand position pitch.",
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = modifier.scale(0.5f)
                         )
                         Icon(
                             imageVector = Icons.Filled.MoreVert,
-                            contentDescription = "Set tilt away limit",
+                            contentDescription = "Set lowest hand position pitch.",
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -138,7 +138,7 @@ fun OrientationSettingsScreen (
                         Box(contentAlignment = Alignment.Center, modifier = modifier
                             .fillMaxHeight()
                             .weight(1f)
-                            .clickable { setGDRollPoint() }
+                            .clickable (onClickLabel = "Set G-D string transition roll") { setGDRollPoint() }
                         ) {
 
                             Box(
@@ -174,7 +174,7 @@ fun OrientationSettingsScreen (
                         Box(contentAlignment = Alignment.Center, modifier = modifier
                             .fillMaxHeight()
                             .weight(1f)
-                            .clickable { setAERollPoint() }
+                            .clickable (onClickLabel = "Set A-E string transition roll") { setAERollPoint() }
                         ) {
 
                             Box(
