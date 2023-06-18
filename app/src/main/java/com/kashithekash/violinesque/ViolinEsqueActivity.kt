@@ -1,6 +1,5 @@
 package com.kashithekash.violinesque
 
-import android.app.Activity
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -12,8 +11,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.core.view.WindowCompat
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -32,15 +31,18 @@ import com.kashithekash.violinesque.ui.theme.ViolinEsqueTheme
 import com.kashithekash.violinesque.ui.orientationSettings.OrientationSettingsScreen
 import com.kashithekash.violinesque.utility.Config
 import com.kashithekash.violinesque.utility.PrefRepo
+import com.kashithekash.violinesque.utility.SoundManager
 import com.kashithekash.violinesque.utility.SoundManagerStringBased
-import com.kashithekash.violinesque.viewmodels.AudioSettingsViewModel
 import com.kashithekash.violinesque.viewmodels.OrientationViewModel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class ViolinEsqueActivity : ComponentActivity() {
 
     private lateinit var orientationViewModel: OrientationViewModel
     private lateinit var interfaceConfigViewModel: InterfaceConfigViewModel
-    private lateinit var soundManagerStringBased: SoundManagerStringBased
+//    private lateinit var soundManagerStringBased: SoundManagerStringBased
+    private lateinit var soundManager: SoundManager
     private lateinit var prefRepo: PrefRepo
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,19 +65,19 @@ class ViolinEsqueActivity : ComponentActivity() {
             savedHandPositionsList = prefRepo.getHandPositionsList(),
         )
 
-        soundManagerStringBased = SoundManagerStringBased(this)
+        soundManager = SoundManager(this)
 
+        lifecycleScope.launch { soundManager.start() }
         orientationViewModel =
             ViewModelProvider(this)[OrientationViewModel(application)::class.java]
         interfaceConfigViewModel =
             ViewModelProvider(this)[InterfaceConfigViewModel(application)::class.java]
 
-        orientationViewModel.setSoundManager(soundManagerStringBased)
+        orientationViewModel.setSoundManager(soundManager)
         orientationViewModel.setPrefRepo(prefRepo)
-        interfaceConfigViewModel.setSoundManager(soundManagerStringBased)
+        interfaceConfigViewModel.setSoundManager(soundManager)
         interfaceConfigViewModel.setPrefRepo(prefRepo)
 
-        orientationViewModel.monitorStrings()
         orientationViewModel.rotationReader.observe(this) {
             orientationViewModel.updateRoll(it[2], it[1])
             orientationViewModel.updatePitch(it[1], it[2])
@@ -97,7 +99,8 @@ class ViolinEsqueActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        orientationViewModel.releaseResources()
+//        orientationViewModel.releaseResources()
+        soundManager.release()
     }
 }
 

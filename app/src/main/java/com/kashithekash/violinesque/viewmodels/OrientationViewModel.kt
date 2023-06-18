@@ -1,7 +1,6 @@
 package com.kashithekash.violinesque.viewmodels
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -11,6 +10,7 @@ import com.kashithekash.violinesque.utility.HandPositionManager
 import com.kashithekash.violinesque.utility.Pi
 import com.kashithekash.violinesque.utility.PrefRepo
 import com.kashithekash.violinesque.utility.RotationReader
+import com.kashithekash.violinesque.utility.SoundManager
 import com.kashithekash.violinesque.utility.SoundManagerStringBased
 import com.kashithekash.violinesque.utility.StringManager
 import com.kashithekash.violinesque.utility.ViolinString
@@ -24,7 +24,8 @@ class OrientationViewModel(application: Application) : AndroidViewModel(applicat
 
     private val stringManager: StringManager = StringManager()
     private val handPositionManager: HandPositionManager = HandPositionManager()
-    private lateinit var soundManagerStringBased: SoundManagerStringBased
+//    private lateinit var soundManagerStringBased: SoundManagerStringBased
+    private lateinit var soundManager: SoundManager
 
     private var cachedString: ViolinString? = null
     private val _currentStringLiveData: MutableLiveData<ViolinString> = MutableLiveData(null)
@@ -53,7 +54,7 @@ class OrientationViewModel(application: Application) : AndroidViewModel(applicat
         _currentStringLiveData.value = stringManager.calculateCurrentString(roll)
         if (_currentStringLiveData.value != cachedString) {
             cachedString = _currentStringLiveData.value
-            soundManagerStringBased.handleStringChange(cachedString!!)
+            soundManager.handleStringChange(cachedString!!)
         }
     }
 
@@ -62,31 +63,33 @@ class OrientationViewModel(application: Application) : AndroidViewModel(applicat
         _currentHandPositionIndexLiveData.value = handPositionManager.calculateCurrentHandPositionIndex(currentPitch)
         if (_currentHandPositionIndexLiveData.value != cachedHandPositionIndex) {
             cachedHandPositionIndex = _currentHandPositionIndexLiveData.value!!
-            soundManagerStringBased.handleHandPositionChange(Config.handPositionsList[cachedHandPositionIndex])
+            soundManager.handleHandPositionChange(Config.handPositionsList[cachedHandPositionIndex])
         }
     }
 
     fun handleHandPositionChanged (index: Int, newHandPosition: Int) {
-        if (index == _currentHandPositionIndexLiveData.value) soundManagerStringBased.handleHandPositionChange(newHandPosition)
+        if (index == _currentHandPositionIndexLiveData.value) soundManager.handleHandPositionChange(newHandPosition)
     }
 
-    fun setSoundManager (soundManagerStringBasedInstance: SoundManagerStringBased) {
-        soundManagerStringBased = soundManagerStringBasedInstance
+    fun setSoundManager (soundManagerInstance: SoundManager) {
+        soundManager = soundManagerInstance
     }
 
     fun setPrefRepo (prefRepoInstance: PrefRepo) {
         prefRepo = prefRepoInstance
     }
 
+    /*
     fun monitorStrings () {
-        viewModelScope.launch { soundManagerStringBased.manageGString() }
-        viewModelScope.launch { soundManagerStringBased.manageDString() }
-        viewModelScope.launch { soundManagerStringBased.manageAString() }
-        viewModelScope.launch { soundManagerStringBased.manageEString() }
+        viewModelScope.launch { soundManager.manageGString() }
+        viewModelScope.launch { soundManager.manageDString() }
+        viewModelScope.launch { soundManager.manageAString() }
+        viewModelScope.launch { soundManager.manageEString() }
     }
+    */
 
     fun releaseResources () {
-        soundManagerStringBased.release()
+        soundManager.release()
     }
 
 //    fun toggleInvertPitch () {

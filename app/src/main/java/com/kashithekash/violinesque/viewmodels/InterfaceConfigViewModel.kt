@@ -1,16 +1,17 @@
 package com.kashithekash.violinesque.viewmodels
 
-import com.kashithekash.violinesque.utility.SoundManagerStringBased
 import android.app.Application
 import androidx.compose.runtime.toMutableStateList
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import com.kashithekash.violinesque.utility.Config
 import com.kashithekash.violinesque.utility.PrefRepo
+import com.kashithekash.violinesque.utility.SoundManager
 
 class InterfaceConfigViewModel (application: Application) : AndroidViewModel(application) {
 
-    private lateinit var soundManagerStringBased: SoundManagerStringBased
+//    private lateinit var soundManagerStringBased: SoundManagerStringBased
+    private lateinit var soundManager: SoundManager
 
     private lateinit var prefRepo: PrefRepo
 
@@ -19,15 +20,15 @@ class InterfaceConfigViewModel (application: Application) : AndroidViewModel(app
     val handPositionsMutableList: MutableList<Int> = Config.handPositionsList.toMutableStateList()
 
     fun buttonTouched (buttonNumber: Int) {
-        soundManagerStringBased.handleButtonTouch(buttonNumber)
+        soundManager.handleButtonTouch(buttonNumber)
     }
 
     fun buttonReleased (buttonNumber: Int) {
-        soundManagerStringBased.handleButtonRelease(buttonNumber)
+        soundManager.handleButtonRelease(buttonNumber)
     }
 
-    fun setSoundManager (soundManagerStringBasedInstance: SoundManagerStringBased) {
-        soundManagerStringBased = soundManagerStringBasedInstance
+    fun setSoundManager (soundManagerInstance: SoundManager) {
+        soundManager = soundManagerInstance
     }
 
     fun setPrefRepo (prefRepoInstance: PrefRepo) {
