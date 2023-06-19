@@ -35,7 +35,7 @@ private val DefaultDispatcher: CoroutineDispatcher = Dispatchers.Default
 
 private const val StreamLoadWaitTime: Int = 20
 private var fadeInDuration: Int = 50
-private var blendDuration: Int = 50
+private var blendDuration: Int = 80
 private var fadeOutDuration: Int = 250
 private var fadeOutDelay: Int = 100
 
