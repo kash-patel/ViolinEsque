@@ -28,15 +28,15 @@ class OrientationViewModel(application: Application) : AndroidViewModel(applicat
     private lateinit var soundManager: SoundManager
 
     private var cachedString: ViolinString? = null
-    private val _currentStringLiveData: MutableLiveData<ViolinString> = MutableLiveData(null)
+    private val _currentStringLiveData: MutableLiveData<ViolinString> = MutableLiveData(ViolinString.A)
     val currentStringLiveData: LiveData<ViolinString> = _currentStringLiveData
 
     private var cachedHandPositionIndex: Int = 0
     private val _currentHandPositionIndexLiveData: MutableLiveData<Int> = MutableLiveData(0)
     val currentHandPositionIndexLiveData: LiveData<Int> = _currentHandPositionIndexLiveData
 
-    val invertRollLiveData: MutableLiveData<Boolean> = MutableLiveData(Config.invertRoll)
-    val invertPitchLiveData: MutableLiveData<Boolean> = MutableLiveData(Config.invertPitch)
+    private val invertRollLiveData: MutableLiveData<Boolean> = MutableLiveData(Config.invertRoll)
+    private val invertPitchLiveData: MutableLiveData<Boolean> = MutableLiveData(Config.invertPitch)
 
     private var currentRoll: Float = 0f
     private var currentPitch: Float = 0f
